@@ -10,7 +10,7 @@
 
 	/* Font Size */
 	--fs-large: 4rem;
-	--fs-medium: 3rem;
+	--fs-medium: 2.5rem;
 	--fs-body: 1.5rem;
 	--fs-small: 1rem;
 
@@ -19,6 +19,9 @@
 	--fc-gap: 1em;
 
 	--margin-medium: 1.5em;
+
+	/* Content dimensions */
+	--dim-grid: 80vmin;
 }
 
 /* General formatting */
@@ -29,10 +32,12 @@
 
 body {
 	margin: var(--margin-medium);
+	font-size: var(--fs-body);
 }
 
 button {
 	display: block;
+	width: clamp(8rem, 28vw, 25rem);
 }
 
 /* Utility classes */
@@ -40,6 +45,7 @@ button {
 .flex {
 	display: flex;
 	flex-direction: row;
+	/* flex-wrap: wrap; */
 	gap: var(--fr-gap);
 }
 
@@ -54,8 +60,29 @@ button {
 	flex-grow: 1;
 }
 
+.grid {
+	display: grid;
+}
+
+.margin-top {
+	margin-top: var(--margin-medium);
+}
+
 /* Specific classes */
 .title {
-	font-size: var(--fs-large);
+	font-size: var(--fs-medium);
 	text-align: center;
+}
+
+.round-buttons,
+.mode-buttons {
+	align-items: center;
+}
+
+.game-grid {
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(4, 1fr);
+	background-color: azure;
+	aspect-ratio: 1;
+	/* padding: var(--margin-medium); */
 }
