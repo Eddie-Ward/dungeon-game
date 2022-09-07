@@ -9,7 +9,33 @@
 		<script defer src="JS/script.js"></script>
 		<title>Dungeon Game</title>
 	</head>
-	<body style="background-color: black">
-		<h1 style="color: white">Hello World</h1>
+	<body>
+		<header>
+			<div class="title">
+				<h1>The Dungeon Game</h1>
+			</div>
+		</header>
+		<main>
+			<section class="status-bar">
+				<div class="status high-score || js-status">High Score:</div>
+				<div class="status time-left || js-status">Time Remaining:</div>
+				<div class="status hp-left || js-status">HP Remaining:</div>
+			</section>
+			<section class="game-screen">
+				<h1>Game Overlay Below</h1>
+				<div class="container || grid | js-grid"></div>
+			</section>
+			<section class="buttons">
+				<div class="game-buttons container || flex | js-game-btns">
+					<button class="game-button || js-btn-hint">Show Hint</button>
+					<button class="game-button || js-btn-reset">Reset Board</button>
+				</div>
+				<div class="mode-buttons container || flex | js-mode-btns">
+					<button class="mode-button || js-btn-diff">Difficulty</button>
+					<button class="mode-button || js-btn-dev">Dev Mode</button>
+				</div>
+			</section>
+		</main>
+		<footer></footer>
 	</body>
 </html>
