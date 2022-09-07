@@ -3,5 +3,5 @@ module.exports = {
 	browser: "firefox",
 	ignore: [/\.s[ac]ss$/i, /\.tsx?$/i],
 	injectBody: true,
-	highlight: true,
+	// highlight: true,
 };
