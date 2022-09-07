@@ -1,4 +1,61 @@
+/* Root variables */
+:root {
+	/* Colors */
+	--clr-background: black;
+	--clr-foreground: white;
+	--clr-dungeon-square: coral;
+	--clr-dungeon-square-path: brown;
+	--clr-dungeon-square-start: green;
+	--clr-dungeon-square-goal: blue;
+
+	/* Font Size */
+	--fs-large: 4rem;
+	--fs-medium: 3rem;
+	--fs-body: 1.5rem;
+	--fs-small: 1rem;
+
+	/* Margin and Padding */
+	--fr-gap: 1em;
+	--fc-gap: 1em;
+
+	--margin-medium: 1.5em;
+}
+
+/* General formatting */
 * {
 	background-color: black;
 	color: white;
+}
+
+body {
+	margin: var(--margin-medium);
+}
+
+button {
+	display: block;
+}
+
+/* Utility classes */
+
+.flex {
+	display: flex;
+	flex-direction: row;
+	gap: var(--fr-gap);
+}
+
+.flex-col {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fc-gap);
+}
+
+.flex > *,
+.flex-col > * {
+	flex-grow: 1;
+}
+
+/* Specific classes */
+.title {
+	font-size: var(--fs-large);
+	text-align: center;
 }
