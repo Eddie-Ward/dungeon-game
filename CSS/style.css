@@ -29,7 +29,6 @@
 	background-color: black;
 	color: white;
 }
-
 body {
 	margin: var(--margin-medium);
 	font-size: var(--fs-body);
@@ -86,3 +85,4 @@ button {
 	aspect-ratio: 1;
 	/* padding: var(--margin-medium); */
 }
+
