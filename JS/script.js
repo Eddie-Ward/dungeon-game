@@ -25,13 +25,11 @@ class Tile {
     }
 }
 const statusesEl = document.querySelectorAll(".js-status");
-// console.log("statusesEl", statusesEl);
 const gridEl = document.querySelector(".js-grid");
-// console.log("gridEl", gridEl);
-const btnsGameEl = document.querySelector(".js-game-btns");
-// console.log("btnsGameEl", btnsGameEl);
-const btnsModeEl = document.querySelector(".js-mode-btns");
-// console.log("btnsModeEl", btnsModeEl);
+const btnHintEl = document.querySelector(".js-btn-hint");
+const btnResetEl = document.querySelector(".js-btn-reset");
+const btnDifficultyEl = document.querySelector(".js-btn-diff");
+const btnDevModeEl = document.querySelector(".js-btn-dev");
 const inputStartingHP = 10;
 const inputContent = [
     ["start", "potion", "enemy", "potion"],
@@ -45,8 +43,13 @@ const inputValues = [
     [6, 2, 9, 3],
     [9, 3, 8, 0],
 ];
-const gridWidth = 4;
-const gridHeight = 4;
+let currentHP = inputStartingHP;
+let currentPos = START;
+const matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+renderGrid(matrixGrid, gridEl);
+statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+gridEl.addEventListener("click", onTileClick);
+btnResetEl?.addEventListener("click", onReset);
 function createGrid(row, col) {
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
@@ -59,43 +62,45 @@ function createGrid(row, col) {
     }
     return gameMatrix;
 }
-// gameMatrix.forEach((arr) => {
-// 	arr.forEach((tile) => {
-// 		console.log`Tile at ${tile.pos} has ${tile.content} at ${tile.value} value`;
-// 	});
-// });
+function renderTile(tile) {
+    const element = document.createElement("div");
+    element.dataset.X = tile.pos.x.toString();
+    element.dataset.X = tile.pos.x.toString();
+    element.dataset.Y = tile.pos.y.toString();
+    if (tile.content === "enemy") {
+        element.classList.add("tile-enemy");
+        element.innerText = (tile.value * -1).toString();
+    }
+    else if (tile.content === "potion") {
+        element.classList.add("tile-potion");
+        element.innerText = tile.value.toString();
+    }
+    else if (tile.content === "start") {
+        element.classList.add("tile-start");
+        element.classList.add("tile-selected");
+        element.innerText = `Starting HP: ${inputStartingHP}`;
+    }
+    else if (tile.content === "finish") {
+        element.classList.add("tile-finish");
+        element.innerText = "Treasure!";
+    }
+    return element;
+}
 function renderGrid(matrix, grid_element) {
-    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${inputStartingHP}`;
     grid_element.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
     grid_element.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
     for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[0].length; j++) {
             const tile = matrix[i][j];
-            const displayTile = document.createElement("div");
-            displayTile.dataset.X = tile.pos.x.toString();
-            displayTile.dataset.Y = tile.pos.y.toString();
-            if (tile.content === "enemy") {
-                displayTile.classList.add("tile-enemy");
-                displayTile.innerText = (tile.value * -1).toString();
-            }
-            else if (tile.content === "potion") {
-                displayTile.classList.add("tile-potion");
-                displayTile.innerText = tile.value.toString();
-            }
-            else if (tile.content === "start") {
-                displayTile.classList.add("tile-start");
-                displayTile.classList.add("tile-selected");
-                displayTile.innerText = `Starting HP: ${inputStartingHP}`;
-            }
-            else if (tile.content === "finish") {
-                displayTile.classList.add("tile-finish");
-                displayTile.innerText = "Treasure!";
-            }
+            const displayTile = renderTile(tile);
             displayTile.style.gridColumnStart = (j + 1).toString();
             displayTile.style.gridRowStart = (i + 1).toString();
             grid_element.appendChild(displayTile);
         }
     }
+}
+function renderVictory() {
+    alert("Victory!");
 }
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
@@ -106,44 +111,50 @@ function moveIsValid(curPos, movePos) {
     }
     return false;
 }
-const matrixGrid = createGrid(4, 4);
-let currentHP = inputStartingHP;
-let curPos = START;
-renderGrid(matrixGrid, gridEl);
-gridEl.addEventListener("click", (event) => {
-    const target = event.target;
-    if (target && target.dataset) {
-        const coords = { y: parseInt(target.dataset.Y), x: parseInt(target.dataset.X) };
-        if (moveIsValid(curPos, coords)) {
-            curPos = coords;
-            if (matrixGrid[coords.y][coords.x].content === "enemy") {
-                currentHP -= matrixGrid[coords.y][coords.x].value;
-                if (currentHP <= 0) {
-                    alert("Not a valid solution!");
-                    renderGrid(matrixGrid, gridEl);
-                    currentHP = inputStartingHP;
-                    curPos = START;
-                }
-            }
-            else if (matrixGrid[coords.y][coords.x].content === "potion") {
-                currentHP += matrixGrid[coords.y][coords.x].value;
-            }
-            else if (matrixGrid[coords.y][coords.x].content === "finish") {
-                if (currentHP > 0) {
-                    alert("Victory!");
-                }
-                else {
-                    alert("Not a valid solution!");
-                    renderGrid(matrixGrid, gridEl);
-                    currentHP = inputStartingHP;
-                    curPos = START;
-                }
-            }
-            target.classList.add("tile-selected");
-            statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
-        }
-        else {
-            alert("Move not valid!");
+function processHP(curHP, curPos, movePos, matrixGrid) {
+    let newHP = curHP;
+    if (matrixGrid[movePos.y][movePos.x].content === "enemy") {
+        newHP -= matrixGrid[movePos.y][movePos.x].value;
+        if (newHP <= 0) {
+            return false;
         }
     }
-});
+    else if (matrixGrid[movePos.y][movePos.x].content === "potion") {
+        newHP += matrixGrid[movePos.y][movePos.x].value;
+    }
+    return newHP;
+}
+function onTileClick(event) {
+    const target = event.target;
+    if (target && target.dataset) {
+        const targetPos = { y: parseInt(target.dataset.Y), x: parseInt(target.dataset.X) };
+        if (moveIsValid(currentPos, targetPos)) {
+            const newHP = processHP(currentHP, currentPos, targetPos, matrixGrid);
+            if (newHP) {
+                currentPos = targetPos;
+                currentHP = newHP;
+                target.classList.add("tile-selected");
+                statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+                if (target.classList.contains("tile-finish")) {
+                    renderVictory();
+                    renderGrid(matrixGrid, gridEl);
+                    currentHP = inputStartingHP;
+                    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+                }
+            }
+            else {
+                alert("HP too low to move there!");
+            }
+        }
+        else {
+            alert("Can't move there!");
+        }
+    }
+}
+function onReset() {
+    currentPos = START;
+    currentHP = inputStartingHP;
+    const matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+    renderGrid(matrixGrid, gridEl);
+    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+}
