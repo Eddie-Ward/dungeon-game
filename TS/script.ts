@@ -33,3 +33,35 @@ const btnsGameEl = document.querySelector(".js-game-btns");
 // console.log("btnsGameEl", btnsGameEl);
 const btnsModeEl = document.querySelector(".js-mode-btns");
 // console.log("btnsModeEl", btnsModeEl);
+
+const inputStartingHP = 10;
+const inputContent = [
+	["start", "potion", "enemy", "potion"],
+	["enemy", "enemy", "potion", "enemy"],
+	["enemy", "enemy", "enemy", "enemy"],
+	["potion", "enemy", "enemy", "finish"],
+];
+const inputValues = [
+	[inputStartingHP, 1, 7, 2],
+	[4, 1, 4, 10],
+	[6, 2, 9, 3],
+	[9, 3, 8, 0],
+];
+const gridWidth = 4;
+const gridHeight = 4;
+const gameMatrix = [];
+
+for (let i = 0; i < gridWidth; i++) {
+	const gameRow: Tile[] = [];
+	for (let j = 0; j < gridWidth; j++) {
+		const tile = new Tile({ y: i, x: j }, inputContent[i][j] as Content, inputValues[i][j]);
+		gameRow.push(tile);
+	}
+	gameMatrix.push(gameRow);
+}
+
+gameMatrix.forEach((arr) => {
+	arr.forEach((tile) => {
+		console.log`Tile at ${tile.pos} has ${tile.content} at ${tile.value} value`;
+	});
+});
