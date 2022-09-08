@@ -45,11 +45,11 @@ const inputValues = [
 ];
 let currentHP = inputStartingHP;
 let currentPos = START;
-const matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+let matrixGrid = createGrid(inputValues.length, inputValues[0].length);
 renderGrid(matrixGrid, gridEl);
 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 gridEl.addEventListener("click", onTileClick);
-btnResetEl?.addEventListener("click", onReset);
+btnResetEl?.addEventListener("click", resetBoard);
 function createGrid(row, col) {
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
@@ -64,7 +64,6 @@ function createGrid(row, col) {
 }
 function renderTile(tile) {
     const element = document.createElement("div");
-    element.dataset.X = tile.pos.x.toString();
     element.dataset.X = tile.pos.x.toString();
     element.dataset.Y = tile.pos.y.toString();
     if (tile.content === "enemy") {
@@ -137,9 +136,7 @@ function onTileClick(event) {
                 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
-                    renderGrid(matrixGrid, gridEl);
-                    currentHP = inputStartingHP;
-                    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+                    resetBoard();
                 }
             }
             else {
@@ -151,10 +148,10 @@ function onTileClick(event) {
         }
     }
 }
-function onReset() {
+function resetBoard() {
     currentPos = START;
     currentHP = inputStartingHP;
-    const matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+    matrixGrid = createGrid(inputValues.length, inputValues[0].length);
     renderGrid(matrixGrid, gridEl);
     statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 }
