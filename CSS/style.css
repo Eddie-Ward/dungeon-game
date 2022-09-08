@@ -79,10 +79,33 @@ button {
 }
 
 .game-grid {
-	grid-template-columns: repeat(4, 1fr);
-	grid-template-rows: repeat(4, 1fr);
+	/* grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
 	/* padding: var(--margin-medium); */
 }
 
+div[class^="tile"] {
+	text-align: center;
+}
+
+.tile-potion {
+	background-color: darkgreen;
+}
+
+.tile-enemy {
+	background-color: darkred;
+}
+
+.tile-start {
+	background-color: brown;
+}
+
+.tile-finish {
+	background-color: goldenrod;
+}
+
+.tile-selected {
+	border: 2px solid black;
+}
