@@ -59,6 +59,8 @@ const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 
+const TILE_CONTENT: Content[] = ["enemy", "potion"];
+
 const inputStartingHP = 10;
 const inputContent = [
 	["start", "potion", "enemy", "potion"],
@@ -73,46 +75,83 @@ const inputValues = [
 	[9, 3, 8, 0],
 ];
 
-//Query select DOM elements
+// Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
 const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
 const gameSectionEl = document.querySelector(".js-game-section") as HTMLElement;
+const btnsResetEl = document.querySelectorAll(".js-btn-reset") as NodeListOf<HTMLButtonElement>;
+const btnsNewEl = document.querySelectorAll(".js-btn-new") as NodeListOf<HTMLButtonElement>;
 const btnHintEl = document.querySelector(".js-btn-hint");
-const btnResetEl = document.querySelector(".js-btn-reset");
-const btnDifficultyEl = document.querySelector(".js-btn-diff");
-const btnDevModeEl = document.querySelector(".js-btn-dev");
+const btnDiffEl = document.querySelector(".js-btn-diff");
+const victoryScreenEl = document.querySelector(".js-victory") as HTMLDivElement;
 
-//Initialize global variables
+// Initialize global variables
 let currentHP = inputStartingHP;
 let currentPos = START;
-let matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+let diffWeight = [0.6, 0.4];
+
+// Create matrix and knight in model
+let currentGrid = createGrid(4, 4);
+currentGrid.forEach((row) => {
+	row.forEach((tile) => {
+		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
+	});
+});
+let prevGrid = backupGrid(currentGrid);
 let knightEl = createKnight(knight);
-renderGrid(matrixGrid, gridEl);
-console.log(gridEl.firstElementChild);
 
-// knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
-// knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
-
+// Render grid and current HP to DOM
+renderGrid(currentGrid, gridEl);
 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 
+// Add event listeners
 gridEl.addEventListener("click", onTileClick);
-btnResetEl?.addEventListener("click", resetBoard);
-// window.addEventListener("resize", () => {
-// 	knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
-// 	knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
-// });
+for (const btn of btnsResetEl) {
+	btn.addEventListener("click", resetBoard);
+}
+
+function randWeight(weight: number[]): number {
+	let random = Math.random();
+	for (let i = 0; i < weight.length; i++) {
+		if (random < weight[i]) {
+			return i;
+		} else {
+			random -= weight[i];
+		}
+	}
+	return 0;
+}
+
+function randRange(min: number, max: number): number {
+	return Math.floor(Math.random() * (max - min) + min);
+}
 
 function createGrid(row: number, col: number): Tile[][] {
 	const gameMatrix: Tile[][] = [];
 	for (let i = 0; i < row; i++) {
 		const gameRow: Tile[] = [];
 		for (let j = 0; j < col; j++) {
-			const tile = new Tile({ y: i, x: j }, inputContent[i][j] as Content, inputValues[i][j]);
-			gameRow.push(tile);
+			let tile;
+			if (i === START.y && j === START.x) {
+				tile = new Tile(START, "start", 0);
+			} else if (i === row - 1 && j === col - 1) {
+				tile = new Tile({ y: i, x: j }, "finish", 0);
+			} else {
+				tile = new Tile({ y: i, x: j }, TILE_CONTENT[randWeight(diffWeight)], randRange(1, HIGHEST_VALUE));
+			}
+			if (tile) {
+				gameRow.push(tile);
+			} else {
+				alert("Failed to generate tile");
+			}
 		}
 		gameMatrix.push(gameRow);
 	}
 	return gameMatrix;
+}
+
+function backupGrid(curGrid: Tile[][]) {
+	return curGrid;
 }
 
 function createKnight(sprite: Sprite): HTMLDivElement {
@@ -170,17 +209,20 @@ function renderTile(tile: Tile): HTMLElement {
 
 		container.classList.add("tile-health");
 	} else if (tile.content === "start") {
+		//Add start text to the tile if it is the start tile
 		valueText.innerText = `Start`;
 		valueText.classList.add("text-value-start");
 		container.classList.add("tile-start");
 		container.classList.add("tile-selected");
 	} else if (tile.content === "finish") {
+		//Add treasure chest to the tile if it is the finish tile
 		svgSprite = renderSprite(svgSprite, GOAL, 0);
 		valueText.innerText = "Goal";
 		valueText.classList.add("text-value-goal");
 		container.classList.add("tile-finish");
 	}
 	if (tile.content === "start") {
+		//Add knight to the tile if it is the start tile
 		container.appendChild(knightEl);
 	} else {
 		container.appendChild(svgSprite);
@@ -205,7 +247,9 @@ function renderGrid(matrix: Tile[][], grid_element: HTMLDivElement) {
 
 function renderVictory() {
 	console.log("Victory!");
-	resetBoard();
+	if (victoryScreenEl.classList.contains("js-off")) {
+		victoryScreenEl.classList.remove("js-off");
+	}
 }
 
 function renderKnight(direction: string, target: HTMLElement) {
@@ -253,7 +297,7 @@ function onTileClick(event: Event) {
 		const targetPos: Coord = { y: parseInt(target.dataset.Y as string), x: parseInt(target.dataset.X as string) };
 		const direction = moveIsValid(currentPos, targetPos);
 		if (direction) {
-			const newHP = processHP(currentHP, currentPos, targetPos, matrixGrid);
+			const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
 			if (newHP) {
 				currentPos = targetPos;
 				currentHP = newHP as number;
@@ -277,15 +321,28 @@ function onTileClick(event: Event) {
 }
 
 function resetBoard() {
+	if (!victoryScreenEl.classList.contains("js-off")) {
+		victoryScreenEl.classList.add("js-off");
+	}
+
+	// Reset position and HP
 	currentPos = START;
 	currentHP = inputStartingHP;
-	matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+
+	// Generate grid from backup grid of values in model.
+	currentGrid = prevGrid;
+
+	// Deleting the existing grid on the DOM
 	while (gridEl.firstChild) {
 		gridEl.removeChild(gridEl.firstChild);
 	}
+
+	// Recreate knight element, but not assigned to any children yet.
 	knightEl = createKnight(knight);
-	console.log(knightEl);
-	renderGrid(matrixGrid, gridEl);
+
+	// Render new grid on DOM, with knight element
+	renderGrid(currentGrid, gridEl);
+
+	// Render HP on DOM
 	statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
-	console.log(knightEl);
 }
