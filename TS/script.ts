@@ -103,7 +103,7 @@ btnResetEl?.addEventListener("click", resetBoard);
 // });
 
 function createGrid(row: number, col: number): Tile[][] {
-	const gameMatrix = [];
+	const gameMatrix: Tile[][] = [];
 	for (let i = 0; i < row; i++) {
 		const gameRow: Tile[] = [];
 		for (let j = 0; j < col; j++) {
