@@ -204,7 +204,7 @@ function renderGrid(matrix: Tile[][], grid_element: HTMLDivElement) {
 }
 
 function renderVictory() {
-	console.log("Victory!");
+	alert("Victory!");
 	resetBoard();
 }
 
