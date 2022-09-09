@@ -93,6 +93,7 @@ button {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
+	max-width: 30em;
 	/* padding: var(--margin-medium); */
 }
 
@@ -101,7 +102,7 @@ div[class^="tile"] {
 	position: relative;
 }
 
-.tile-potion {
+.tile-health {
 	background-color: darkgreen;
 }
 
@@ -118,13 +119,54 @@ div[class^="tile"] {
 	background-color: goldenrod;
 }
 
-.tile-selected {
-	border: 2px solid black;
+.tile-selected img[class^="svg"]:not(.svg-knight),
+.tile-selected p[class^="text-value"]:not(.text-value-knight) {
+	opacity: 20%;
 }
 
-p[class^="text-value"] {
+p[class^="text-value"]:not(p.text-value-start, p.text-value-knight) {
 	/* float: right; */
 	position: absolute;
-	top: 0%;
+	top: 5%;
+	right: 7%;
 	z-index: 1;
+	background-color: transparent;
+}
+
+p.text-value-start {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	background-color: transparent;
+}
+
+p.text-value-knight {
+	position: absolute;
+	bottom: 5%;
+	right: 5%;
+	background-color: transparent;
+}
+
+img[class^="svg"] {
+	transform: scale(0.8, 0.8);
+	background-color: transparent;
+	/* margin: auto auto; */
+}
+
+.container-knight {
+	position: absolute;
+	top: 0%;
+	z-index: 5;
+	background-color: transparent;
+	transition: transform 500ms;
+}
+
+.knight-right {
+	transform: translate(100%, 0%);
+}
+
+.knight-down {
+	transform: translate(0%, 100%);
 }

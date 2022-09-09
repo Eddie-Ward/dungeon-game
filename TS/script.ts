@@ -76,6 +76,7 @@ const inputValues = [
 //Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
 const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
+const gameSectionEl = document.querySelector(".js-game-section") as HTMLElement;
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnResetEl = document.querySelector(".js-btn-reset");
 const btnDifficultyEl = document.querySelector(".js-btn-diff");
@@ -87,10 +88,19 @@ let currentPos = START;
 let matrixGrid = createGrid(inputValues.length, inputValues[0].length);
 let knightEl = createKnight(knight);
 renderGrid(matrixGrid, gridEl);
+console.log(gridEl.firstElementChild);
+
+// knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
+// knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
+
 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 
 gridEl.addEventListener("click", onTileClick);
 btnResetEl?.addEventListener("click", resetBoard);
+// window.addEventListener("resize", () => {
+// 	knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
+// 	knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
+// });
 
 function createGrid(row: number, col: number): Tile[][] {
 	const gameMatrix = [];
@@ -119,6 +129,7 @@ function createKnight(sprite: Sprite): HTMLDivElement {
 
 	knightContainer.appendChild(knightSVG);
 	knightContainer.appendChild(knightHP);
+	knightContainer.classList.add("container-knight");
 	return knightContainer;
 }
 
@@ -169,7 +180,9 @@ function renderTile(tile: Tile): HTMLElement {
 		valueText.classList.add("text-value-goal");
 		container.classList.add("tile-finish");
 	}
-	if (tile.content !== "start") {
+	if (tile.content === "start") {
+		container.appendChild(knightEl);
+	} else {
 		container.appendChild(svgSprite);
 	}
 	container.appendChild(valueText);
@@ -191,14 +204,26 @@ function renderGrid(matrix: Tile[][], grid_element: HTMLDivElement) {
 }
 
 function renderVictory() {
-	alert("Victory!");
+	console.log("Victory!");
+	resetBoard();
 }
 
-function moveIsValid(curPos: Coord, movePos: Coord) {
+function renderKnight(direction: string, target: HTMLElement) {
+	knightEl.classList.add(`knight-${direction}`);
+	const updateKnight = function () {
+		knightEl.classList.remove(`knight-${direction}`);
+		target.appendChild(knightEl);
+	};
+	setTimeout(updateKnight, 500);
+	const knightHP = knightEl.lastElementChild as HTMLElement;
+	knightHP.innerText = currentHP.toString();
+}
+
+function moveIsValid(curPos: Coord, movePos: Coord): string | boolean {
 	if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
-		return true;
+		return "right";
 	} else if (movePos.x === curPos.x && movePos.y - curPos.y === 1) {
-		return true;
+		return "down";
 	}
 	return false;
 }
@@ -218,23 +243,29 @@ function processHP(curHP: number, curPos: Coord, movePos: Coord, matrixGrid: Til
 
 function onTileClick(event: Event) {
 	let target = event.target as HTMLElement;
-	if (target.tagName === "IMG") {
+	if (
+		(target.tagName === "IMG" || target.tagName === "P") &&
+		!target.parentElement?.classList.contains("container-knight")
+	) {
 		target = target.parentElement as HTMLElement;
 	}
 	if (target && target.dataset.X) {
-		console.log("Clicked on " + target.toString());
-		console.log(`X: ${target.dataset.X} Y: ${target.dataset.Y}`);
 		const targetPos: Coord = { y: parseInt(target.dataset.Y as string), x: parseInt(target.dataset.X as string) };
-		if (moveIsValid(currentPos, targetPos)) {
+		const direction = moveIsValid(currentPos, targetPos);
+		if (direction) {
 			const newHP = processHP(currentHP, currentPos, targetPos, matrixGrid);
 			if (newHP) {
 				currentPos = targetPos;
 				currentHP = newHP as number;
-				target.classList.add("tile-selected");
+
+				renderKnight(direction as string, target);
+
 				statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+
+				target.classList.add("tile-selected");
+
 				if (target.classList.contains("tile-finish")) {
 					renderVictory();
-					resetBoard();
 				}
 			} else {
 				alert("HP too low to move there!");
@@ -249,6 +280,12 @@ function resetBoard() {
 	currentPos = START;
 	currentHP = inputStartingHP;
 	matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+	while (gridEl.firstChild) {
+		gridEl.removeChild(gridEl.firstChild);
+	}
+	knightEl = createKnight(knight);
+	console.log(knightEl);
 	renderGrid(matrixGrid, gridEl);
 	statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+	console.log(knightEl);
 }
