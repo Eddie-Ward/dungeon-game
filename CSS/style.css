@@ -1,38 +1,42 @@
 /* Root variables */
 :root {
 	/* Colors */
-	--clr-default-bg: #4c6085;
-	--clr-default-text: #eaebed;
-
-	--clr-bg-start: coral;
+	--clr-default-bg: #ffd3ba;
+	--clr-default-text: black;
+	--clr-bg-accent: #ffbe99;
+	--clr-text-accent: #6a2532;
+	--clr-bg-button: #ffb185;
+	--clr-border-button: #ff7e33;
+	--clr-text-button: #3d1600;
+	--clr-bg-start: #ffa630;
 	--clr-text-start: lightgray;
 
 	--clr-bg-selected: brown;
 	--clr-text-selected: darkgray;
 
-	--clr-bg-health: lightgreen;
-	--clr-text-health: greenyellow;
+	--clr-text-health: #386641;
+	--clr-bg-health: #6d9b56;
 
-	--clr-bg-enemy: red;
-	--clr-text-enemy: lightpink;
+	--clr-text-enemy: #6a2532;
+	--clr-bg-enemy: #cb6792;
 
-	--clr-bg-goal: goldenrod;
+	--clr-bg-goal: #ffa630;
 	--clr-text-goal: white;
 
 	--clr-text-knight: green;
 
 	/* Font Family */
-	--ff-accent-1: "Rubik Mono One", sans-serif;
+	--ff-accent-1: "a Ampun Bang", sans-serif;
 	--ff-accent-2: sans-serif;
-	--ff-body: ;
+	--ff-body: "Coda", sans-serif;
 	--ff-number: "Passion One", cursive;
-	--ff-button: ;
+	--ff-button: "Coda", sans-serif;
 
 	/* Font Size */
-	--fs-large: 4rem;
-	--fs-medium: 2.5rem;
-	--fs-body: 1.5rem;
-	--fs-small: 1rem;
+	--fs-large: 2.5em;
+	--fs-grid: 1.5em;
+	--fs-text: 1.25em;
+	--fs-small: 1em;
 
 	/* Font Weight */
 	--fw-number: 400;
@@ -53,15 +57,17 @@
 }
 
 /* General formatting */
-* {
+body {
 	background-color: var(--clr-default-bg);
 	color: var(--clr-default-text);
-}
-body {
-	font-size: var(--fs-body);
-	max-width: 50em;
+	max-width: 60em;
 	margin-inline: auto;
+	font-family: var(--ff-body);
 	/* border: 1px solid red; */
+}
+
+.status {
+	font-size: var(--fs-text);
 }
 
 main {
@@ -70,7 +76,11 @@ main {
 
 button {
 	display: block;
-	width: clamp(8rem, 28vw, 25rem);
+	width: clamp(8em, 25vw, 10em);
+	font-size: var(--fs-text);
+	background-color: var(--clr-bg-button);
+	color: var(--clr-text-button);
+	border: 5px solid var(--clr-border-button);
 }
 
 /* Utility classes */
@@ -116,12 +126,13 @@ button {
 
 .font-accent-one {
 	font-family: var(--ff-accent-1);
-	font-size: 2rem;
+	color: var(--clr-text-accent);
+	font-size: 2em;
 }
 
 /* Specific classes */
 .title {
-	font-size: var(--fs-medium);
+	font-size: var(--fs-large);
 	text-align: center;
 }
 
@@ -144,7 +155,7 @@ div[class^="tile"] {
 	position: relative;
 	font-family: var(--ff-number);
 	font-weight: var(--fw-number);
-	font-size: 1.5rem;
+	font-size: var(--fs-grid);
 }
 
 .tile-health {
@@ -203,7 +214,7 @@ p.text-value-knight {
 }
 
 img[class^="svg"] {
-	transform: scale(0.8, 0.8);
+	transform: scale(0.6, 0.6);
 	background-color: transparent;
 	/* margin: auto auto; */
 }
@@ -231,7 +242,8 @@ img[class^="svg"] {
 	left: 50%;
 	transform: translate(-50%, -50%);
 	width: clamp(1.5em, 75vw, 28em);
-	border: 5px solid red;
+	background-color: var(--clr-bg-accent);
+	border: 5px solid var(--clr-border-button);
 	text-align: center;
 }
 
@@ -244,12 +256,19 @@ img[class^="svg"] {
 	display: none;
 }
 
-@media (min-width: 40em) {
+@media (min-width: 500px) {
 	:root {
 		--fw-number: 700;
+		--fs-large: 3em;
+		--fs-grid: 2em;
+		--fs-text: 1.5em;
 	}
+}
 
-	div[class^="tile"] {
-		font-size: 2rem;
+@media (min-width: 700px) {
+	:root {
+		--fs-large: 4em;
+		--fs-grid: 2em;
+		--fs-text: 2em;
 	}
 }

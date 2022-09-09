@@ -42,17 +42,14 @@ const STATUSES = {
     HP: 1,
     SCORE: 2,
 };
-const HIGHEST_VALUE = 16;
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
 const reaper = new Sprite("reaper");
 const dragon = new Sprite("dragon");
 const ENEMIES = [spider, orc, reaper, dragon];
-const ENEMIES_RANK = Math.floor(HIGHEST_VALUE / ENEMIES.length);
 const meat = new Sprite("meat");
 const potion = new Sprite("potion");
 const HEALTH = [meat, potion];
-const HEALTH_RANK = Math.floor(HIGHEST_VALUE / HEALTH.length);
 const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
@@ -83,6 +80,10 @@ const victoryScreenEl = document.querySelector(".js-victory");
 let currentHP = inputStartingHP;
 let currentPos = START;
 let diffWeight = [0.6, 0.4];
+let maxValueEnemy = 16;
+let maxValueHealth = 8;
+let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
+let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
 currentGrid.forEach((row) => {
@@ -99,6 +100,9 @@ statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 gridEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
     btn.addEventListener("click", resetBoard);
+}
+for (const btn of btnsNewEl) {
+    btn.addEventListener("click", newBoard);
 }
 function randWeight(weight) {
     let random = Math.random();
@@ -128,7 +132,9 @@ function createGrid(row, col) {
                 tile = new Tile({ y: i, x: j }, "finish", 0);
             }
             else {
-                tile = new Tile({ y: i, x: j }, TILE_CONTENT[randWeight(diffWeight)], randRange(1, HIGHEST_VALUE));
+                const index = randWeight(diffWeight);
+                const maxValues = [maxValueEnemy, maxValueHealth];
+                tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
             }
             if (tile) {
                 gameRow.push(tile);
@@ -176,13 +182,13 @@ function renderTile(tile) {
     container.dataset.X = tile.pos.x.toString();
     container.dataset.Y = tile.pos.y.toString();
     if (tile.content === "enemy") {
-        svgSprite = renderSprite(svgSprite, ENEMIES, Math.floor(tile.value / ENEMIES_RANK), tile.value);
+        svgSprite = renderSprite(svgSprite, ENEMIES, Math.floor(tile.value / enemiesRank), tile.value);
         valueText.innerText = `-${tile.value}`;
         valueText.classList.add("text-value-enemy");
         container.classList.add("tile-enemy");
     }
     else if (tile.content === "potion") {
-        svgSprite = renderSprite(svgSprite, HEALTH, Math.floor(tile.value / HEALTH_RANK), tile.value);
+        svgSprite = renderSprite(svgSprite, HEALTH, Math.floor(tile.value / healthRank), tile.value);
         valueText.innerText = `+${tile.value}`;
         valueText.classList.add("text-value-health");
         container.classList.add("tile-health");
@@ -299,8 +305,6 @@ function resetBoard() {
     // Reset position and HP
     currentPos = START;
     currentHP = inputStartingHP;
-    // Generate grid from backup grid of values in model.
-    currentGrid = prevGrid;
     // Deleting the existing grid on the DOM
     while (gridEl.firstChild) {
         gridEl.removeChild(gridEl.firstChild);
@@ -311,4 +315,8 @@ function resetBoard() {
     renderGrid(currentGrid, gridEl);
     // Render HP on DOM
     statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+}
+function newBoard() {
+    currentGrid = createGrid(4, 4);
+    resetBoard();
 }
