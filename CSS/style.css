@@ -51,16 +51,13 @@
 	--padding-small: 1em;
 	--padding-medium: 1.5em;
 	--padding-large: 3em;
-
-	/* Content dimensions */
-	--dim-grid: 80vmin;
 }
 
 /* General formatting */
 body {
 	background-color: var(--clr-default-bg);
 	color: var(--clr-default-text);
-	max-width: 60em;
+	max-width: 80em;
 	margin-inline: auto;
 	font-family: var(--ff-body);
 	/* border: 1px solid red; */
@@ -146,7 +143,7 @@ button {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
-	max-width: 30em;
+	max-width: 40em;
 	/* padding: var(--margin-medium); */
 }
 
@@ -270,5 +267,6 @@ img[class^="svg"] {
 		--fs-large: 4em;
 		--fs-grid: 2em;
 		--fs-text: 2em;
+		--padding-medium: 2.5em;
 	}
 }
