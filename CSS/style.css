@@ -89,8 +89,8 @@ button {
 }
 
 .game-grid {
-	/* grid-template-columns: repeat(4, 1fr);
-	grid-template-rows: repeat(4, 1fr); */
+	/* grid-template-columns: repeat(4, 1fr); */
+	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
 	/* padding: var(--margin-medium); */
@@ -98,6 +98,7 @@ button {
 
 div[class^="tile"] {
 	text-align: center;
+	position: relative;
 }
 
 .tile-potion {
@@ -106,6 +107,7 @@ div[class^="tile"] {
 
 .tile-enemy {
 	background-color: darkred;
+	text-align: right;
 }
 
 .tile-start {
@@ -118,4 +120,11 @@ div[class^="tile"] {
 
 .tile-selected {
 	border: 2px solid black;
+}
+
+p[class^="text-value"] {
+	/* float: right; */
+	position: absolute;
+	top: 0%;
+	z-index: 1;
 }

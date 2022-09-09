@@ -5,12 +5,22 @@ type Coord = {
 
 type Content = "potion" | "enemy" | "start" | "finish";
 
-const START: Coord = { y: 0, x: 0 };
-const STATUSES = {
-	TIME: 0,
-	HP: 1,
-	SCORE: 2,
-};
+class Sprite {
+	constructor(protected _type: string) {}
+
+	get type() {
+		return this._type;
+	}
+	src(): string {
+		return `./SRC/SVG/${this.type}-svgrepo-com.svg`;
+	}
+	style(): string {
+		return `svg-${this.type}`;
+	}
+	alt(value: number): string {
+		return `${this.type} with ${value} HP`;
+	}
+}
 
 class Tile {
 	constructor(protected _pos: Coord, protected _content: Content, protected _value: number) {}
@@ -25,12 +35,29 @@ class Tile {
 	}
 }
 
-const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
-const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
-const btnHintEl = document.querySelector(".js-btn-hint");
-const btnResetEl = document.querySelector(".js-btn-reset");
-const btnDifficultyEl = document.querySelector(".js-btn-diff");
-const btnDevModeEl = document.querySelector(".js-btn-dev");
+const START: Coord = { y: 0, x: 0 };
+const STATUSES = {
+	TIME: 0,
+	HP: 1,
+	SCORE: 2,
+};
+const HIGHEST_VALUE = 16;
+
+const spider = new Sprite("spider");
+const orc = new Sprite("orc");
+const reaper = new Sprite("reaper");
+const dragon = new Sprite("dragon");
+const ENEMIES = [spider, orc, reaper, dragon];
+const ENEMIES_RANK = Math.floor(HIGHEST_VALUE / ENEMIES.length);
+
+const meat = new Sprite("meat");
+const potion = new Sprite("potion");
+const HEALTH = [meat, potion];
+const HEALTH_RANK = Math.floor(HIGHEST_VALUE / HEALTH.length);
+
+const knight = new Sprite("knight");
+const treasure = new Sprite("treasure");
+const GOAL = [treasure];
 
 const inputStartingHP = 10;
 const inputContent = [
@@ -46,9 +73,19 @@ const inputValues = [
 	[9, 3, 8, 0],
 ];
 
+//Query select DOM elements
+const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
+const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
+const btnHintEl = document.querySelector(".js-btn-hint");
+const btnResetEl = document.querySelector(".js-btn-reset");
+const btnDifficultyEl = document.querySelector(".js-btn-diff");
+const btnDevModeEl = document.querySelector(".js-btn-dev");
+
+//Initialize global variables
 let currentHP = inputStartingHP;
 let currentPos = START;
 let matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+let knightEl = createKnight(knight);
 renderGrid(matrixGrid, gridEl);
 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
 
@@ -68,25 +105,75 @@ function createGrid(row: number, col: number): Tile[][] {
 	return gameMatrix;
 }
 
-function renderTile(tile: Tile): HTMLElement {
-	const element = document.createElement("div");
-	element.dataset.X = tile.pos.x.toString();
-	element.dataset.Y = tile.pos.y.toString();
-	if (tile.content === "enemy") {
-		element.classList.add("tile-enemy");
-		element.innerText = (tile.value * -1).toString();
-	} else if (tile.content === "potion") {
-		element.classList.add("tile-potion");
-		element.innerText = tile.value.toString();
-	} else if (tile.content === "start") {
-		element.classList.add("tile-start");
-		element.classList.add("tile-selected");
-		element.innerText = `Starting HP: ${inputStartingHP}`;
-	} else if (tile.content === "finish") {
-		element.classList.add("tile-finish");
-		element.innerText = "Treasure!";
+function createKnight(sprite: Sprite): HTMLDivElement {
+	const knightContainer = document.createElement("div");
+	const knightSVG = document.createElement("img");
+	const knightHP = document.createElement("p");
+
+	knightSVG.src = knight.src();
+	knightSVG.classList.add(knight.style());
+	knightSVG.alt = knight.alt(currentHP);
+
+	knightHP.innerText = currentHP.toString();
+	knightHP.classList.add("text-value-knight");
+
+	knightContainer.appendChild(knightSVG);
+	knightContainer.appendChild(knightHP);
+	return knightContainer;
+}
+
+function renderSprite(
+	imgElement: HTMLImageElement,
+	sprites: Sprite[],
+	index: number,
+	value?: number
+): HTMLImageElement {
+	imgElement.src = sprites[index].src();
+	if (value) {
+		imgElement.alt = sprites[index].alt(value);
+	} else {
+		imgElement.alt = sprites[index].toString();
 	}
-	return element;
+	imgElement.classList.add(sprites[index].style());
+	return imgElement;
+}
+
+function renderTile(tile: Tile): HTMLElement {
+	const container = document.createElement("div");
+	let svgSprite = document.createElement("img");
+	let valueText = document.createElement("p");
+	container.dataset.X = tile.pos.x.toString();
+	container.dataset.Y = tile.pos.y.toString();
+	if (tile.content === "enemy") {
+		svgSprite = renderSprite(svgSprite, ENEMIES, Math.floor(tile.value / ENEMIES_RANK), tile.value);
+
+		valueText.innerText = `-${tile.value}`;
+		valueText.classList.add("text-value-enemy");
+
+		container.classList.add("tile-enemy");
+	} else if (tile.content === "potion") {
+		svgSprite = renderSprite(svgSprite, HEALTH, Math.floor(tile.value / HEALTH_RANK), tile.value);
+
+		valueText.innerText = `+${tile.value}`;
+		valueText.classList.add("text-value-health");
+
+		container.classList.add("tile-health");
+	} else if (tile.content === "start") {
+		valueText.innerText = `Start`;
+		valueText.classList.add("text-value-start");
+		container.classList.add("tile-start");
+		container.classList.add("tile-selected");
+	} else if (tile.content === "finish") {
+		svgSprite = renderSprite(svgSprite, GOAL, 0);
+		valueText.innerText = "Goal";
+		valueText.classList.add("text-value-goal");
+		container.classList.add("tile-finish");
+	}
+	if (tile.content !== "start") {
+		container.appendChild(svgSprite);
+	}
+	container.appendChild(valueText);
+	return container;
 }
 
 function renderGrid(matrix: Tile[][], grid_element: HTMLDivElement) {
@@ -130,8 +217,13 @@ function processHP(curHP: number, curPos: Coord, movePos: Coord, matrixGrid: Til
 }
 
 function onTileClick(event: Event) {
-	const target = event.target as HTMLDivElement;
-	if (target && target.dataset) {
+	let target = event.target as HTMLElement;
+	if (target.tagName === "IMG") {
+		target = target.parentElement as HTMLElement;
+	}
+	if (target && target.dataset.X) {
+		console.log("Clicked on " + target.toString());
+		console.log(`X: ${target.dataset.X} Y: ${target.dataset.Y}`);
 		const targetPos: Coord = { y: parseInt(target.dataset.Y as string), x: parseInt(target.dataset.X as string) };
 		if (moveIsValid(currentPos, targetPos)) {
 			const newHP = processHP(currentHP, currentPos, targetPos, matrixGrid);
