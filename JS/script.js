@@ -183,7 +183,7 @@ function renderGrid(matrix, grid_element) {
     }
 }
 function renderVictory() {
-    alert("Victory!");
+    console.log("Victory!");
     resetBoard();
 }
 function renderKnight(direction, target) {
