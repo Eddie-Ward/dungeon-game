@@ -1,9 +1,10 @@
-type Coord = {
+interface Coord {
 	y: number;
 	x: number;
-};
+}
 
 type Content = "potion" | "enemy" | "start" | "finish";
+type Direction = "right" | "down" | "end";
 
 class Sprite {
 	constructor(protected _type: string) {}
@@ -35,14 +36,9 @@ class Tile {
 	}
 }
 
-class listNode {
-	constructor(public value: any, public next: listNode | null) {}
+class ListNode {
+	constructor(public value: any, public next: ListNode | null, public dir: Direction | null) {}
 }
-
-const head = new listNode(5, null);
-const next_node = new listNode(7, null);
-head.next = next_node;
-console.log(`${head} is pointing to ${head.next}`);
 
 const START: Coord = { y: 0, x: 0 };
 const STATUSES = {
@@ -103,7 +99,7 @@ let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
-let currentHP = calcGrid(currentGrid);
+let [currentHP, mapPaths] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
 // 	row.forEach((tile) => {
@@ -112,8 +108,10 @@ let knightEl = createKnight(knight);
 // });
 
 // Render grid and current HP to DOM
-renderGrid(currentGrid, gridEl);
+let renderGridEl = renderGrid(currentGrid, gridEl);
 statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+
+renderPath(renderGridEl, mapPaths);
 
 // Add event listeners
 gridEl.addEventListener("click", onTileClick);
@@ -123,6 +121,7 @@ for (const btn of btnsResetEl) {
 for (const btn of btnsNewEl) {
 	btn.addEventListener("click", newBoard);
 }
+
 function randWeight(weight: number[]): number {
 	let random = Math.random();
 	for (let i = 0; i < weight.length; i++) {
@@ -157,7 +156,7 @@ function createGrid(row: number, col: number): Tile[][] {
 			if (tile) {
 				gameRow.push(tile);
 			} else {
-				alert("Failed to generate tile");
+				console.log("Failed to generate tile");
 			}
 		}
 		gameMatrix.push(gameRow);
@@ -165,24 +164,36 @@ function createGrid(row: number, col: number): Tile[][] {
 	return gameMatrix;
 }
 
-function calcGrid(grid: Tile[][]): number {
+function calcGrid(grid: Tile[][]): [number, Direction[][]] {
 	const n = grid[0].length;
 	const m = grid.length;
+	const paths: Direction[][] = [[]];
 	const row: number[] = new Array(n + 1);
 	const dp: number[][] = new Array(m + 1);
 	dp.fill(row.fill(Infinity));
-	for (let y = m - 1; y >= 0; y--) {
-		for (let x = n - 1; x >= 0; x--) {
-			if (y === m - 1 && x === n - 1) {
-				dp[y][x] = 0;
+	for (let row = m - 1; row >= 0; row--) {
+		const pathsRow: Direction[] = [];
+		for (let col = n - 1; col >= 0; col--) {
+			if (row === m - 1 && col === n - 1) {
+				dp[row][col] = 0;
+				pathsRow.unshift("end");
 			} else {
-				const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
-				dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
+				const value = grid[row][col].content === "enemy" ? grid[row][col].value : grid[row][col].value * -1;
+				const down = dp[row + 1][col];
+				const right = dp[row][col + 1];
+				if (down < right) {
+					pathsRow.unshift("down");
+					dp[row][col] = Math.max(value, value + down);
+				} else {
+					pathsRow.unshift("right");
+					dp[row][col] = Math.max(value, value + right);
+				}
 				// console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
 			}
 		}
+		paths.unshift(pathsRow);
 	}
-	return dp[0][0] + 1;
+	return [dp[0][0] + 1, paths];
 }
 
 function createKnight(sprite: Sprite): HTMLDivElement {
@@ -262,25 +273,23 @@ function renderTile(tile: Tile): HTMLElement {
 	return container;
 }
 
-function renderGrid(matrix: Tile[][], grid_element: HTMLDivElement) {
-	grid_element.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
-	grid_element.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
+function renderGrid(matrix: Tile[][], gridEl: HTMLDivElement): HTMLElement[][] {
+	const renderGridEl: HTMLElement[][] = [];
+	gridEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
+	gridEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
 	for (let i = 0; i < matrix.length; i++) {
+		const renderRowEl: HTMLElement[] = [];
 		for (let j = 0; j < matrix[0].length; j++) {
 			const tile = matrix[i][j];
 			const displayTile = renderTile(tile);
 			displayTile.style.gridColumnStart = (j + 1).toString();
 			displayTile.style.gridRowStart = (i + 1).toString();
-			grid_element.appendChild(displayTile);
+			gridEl.appendChild(displayTile);
+			renderRowEl.push(displayTile);
 		}
+		renderGridEl.push(renderRowEl);
 	}
-}
-
-function renderVictory() {
-	console.log("Victory!");
-	if (victoryScreenEl.classList.contains("js-off")) {
-		victoryScreenEl.classList.remove("js-off");
-	}
+	return renderGridEl;
 }
 
 function renderKnight(direction: string, target: HTMLElement) {
@@ -292,6 +301,23 @@ function renderKnight(direction: string, target: HTMLElement) {
 	setTimeout(updateKnight, 500);
 	const knightHP = knightEl.lastElementChild as HTMLElement;
 	knightHP.innerText = currentHP.toString();
+}
+
+function renderVictory() {
+	console.log("Victory!");
+	if (victoryScreenEl.classList.contains("js-off")) {
+		victoryScreenEl.classList.remove("js-off");
+	}
+}
+
+function renderPath(gridEl: HTMLElement[][], path: Direction[][]) {
+	let [i, j] = [0, 0];
+	let curNode = path[i][j];
+	while (curNode !== "end") {
+		console.log(`[${i + 1}, ${j + 1}]`);
+		[i, j] = curNode === "down" ? [i + 1, j] : [i, j + 1];
+		curNode = path[i][j];
+	}
 }
 
 function moveIsValid(curPos: Coord, movePos: Coord): string | boolean {
@@ -358,7 +384,7 @@ function resetBoard() {
 
 	// Reset position and HP
 	currentPos = START;
-	currentHP = calcGrid(currentGrid);
+	[currentHP, mapPaths] = calcGrid(currentGrid);
 
 	// Deleting the existing grid on the DOM
 	while (gridEl.firstChild) {
@@ -369,7 +395,7 @@ function resetBoard() {
 	knightEl = createKnight(knight);
 
 	// Render new grid on DOM, with knight element
-	renderGrid(currentGrid, gridEl);
+	renderGridEl = renderGrid(currentGrid, gridEl);
 
 	// Render HP on DOM
 	statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;

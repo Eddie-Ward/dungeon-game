@@ -26,7 +26,7 @@
 	--clr-text-knight: green;
 
 	/* Font Family */
-	--ff-accent-1: "a Ampun Bang", sans-serif;
+	--ff-accent-1: "Ampun Bang", sans-serif;
 	--ff-accent-2: sans-serif;
 	--ff-body: "Coda", sans-serif;
 	--ff-number: "Passion One", cursive;
@@ -54,6 +54,13 @@
 }
 
 /* General formatting */
+@font-face {
+	font-family: "Ampun Bang";
+	font-style: normal;
+	font-weight: 400;
+	src: url("https://fonts.cdnfonts.com/s/47799/AmpunBang-PKXL2.woff") format("woff");
+}
+
 body {
 	background-color: var(--clr-default-bg);
 	color: var(--clr-default-text);
