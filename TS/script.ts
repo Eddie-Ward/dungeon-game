@@ -86,6 +86,7 @@ const btnsNewEl = document.querySelectorAll(".js-btn-new") as NodeListOf<HTMLBut
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
 const victoryScreenEl = document.querySelector(".js-victory") as HTMLDivElement;
+const victoryMessageEl = document.querySelector(".js-victory-message") as HTMLParagraphElement;
 
 // Initialize global variables
 let currentPos = START;
@@ -305,6 +306,7 @@ function renderKnight(direction: string, target: HTMLElement) {
 
 function renderVictory() {
 	console.log("Victory!");
+	victoryMessageEl.innerText = `You reached the goal with ${currentHP} remaining!`;
 	if (victoryScreenEl.classList.contains("js-off")) {
 		victoryScreenEl.classList.remove("js-off");
 	}
