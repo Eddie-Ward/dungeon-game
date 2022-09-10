@@ -48,9 +48,8 @@ class ListNode {
 }
 const START = { y: 0, x: 0 };
 const STATUSES = {
-    TIME: 0,
-    HP: 1,
-    SCORE: 2,
+    HP: 0,
+    SCORE: 1,
 };
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
@@ -80,13 +79,14 @@ const inputValues = [
 // Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status");
 const gridEl = document.querySelector(".js-grid");
-const gameSectionEl = document.querySelector(".js-game-section");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
 const victoryScreenEl = document.querySelector(".js-victory");
 const victoryMessageEl = document.querySelector(".js-victory-message");
+console.log(statusesEl[STATUSES.HP]);
+console.log(statusesEl[STATUSES.SCORE]);
 // Initialize global variables
 let currentPos = START;
 let diffWeight = [0.75, 0.25];
@@ -105,7 +105,7 @@ let knightEl = createKnight(knight);
 // });
 // Render grid and current HP to DOM
 let renderGridEl = renderGrid(currentGrid, gridEl);
-statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
 renderPath(renderGridEl, mapPaths);
 // Add event listeners
 gridEl.addEventListener("click", onTileClick);
@@ -288,7 +288,7 @@ function renderKnight(direction, target) {
 }
 function renderVictory() {
     console.log("Victory!");
-    victoryMessageEl.innerText = `You reached the goal with ${currentHP} remaining!`;
+    victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
     if (victoryScreenEl.classList.contains("js-off")) {
         victoryScreenEl.classList.remove("js-off");
     }
@@ -339,7 +339,7 @@ function onTileClick(event) {
                 currentPos = targetPos;
                 currentHP = newHP;
                 renderKnight(direction, target);
-                statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+                statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
                 target.classList.add("tile-selected");
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
@@ -370,7 +370,7 @@ function resetBoard() {
     // Render new grid on DOM, with knight element
     renderGridEl = renderGrid(currentGrid, gridEl);
     // Render HP on DOM
-    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+    statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
 }
 function newBoard() {
     currentGrid = createGrid(4, 4);

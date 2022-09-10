@@ -7,7 +7,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Passion+One:wght@400;700&family=Rubik+Mono+One&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Passion+One:wght@400;700&display=swap"
 			rel="stylesheet" />
 		<link rel="stylesheet" href="CSS/reset.css" />
 		<link rel="stylesheet" href="CSS/style.css" />
@@ -16,25 +16,26 @@
 	</head>
 	<body>
 		<header>
-			<div class="title | font-accent-one margin-top">
+			<div class="title | font-accent-one padding-top padding-inline">
 				<h1>Dungeon Tiles</h1>
 			</div>
 		</header>
 		<main>
 			<section class="status-bar || padding-inline padding-top">
-				<div class="game-status container || flex">
-					<div class="round-status container || flex-col">
-						<div class="status time-left || js-status">Time Remaining:</div>
-						<div class="status hp-left || js-status">HP Remaining:</div>
+				<div class="game-status container">
+					<div class="status tutorial ||">Reach the goal without hitting 0 HP!</div>
+					<div class="status tutorial ||">You can only move down or right.</div>
+					<div class="round-status container || flex-even-col margin-top">
+						<div class="status hp-left || js-status">HP:</div>
+						<div class="status high-score || js-status">Score:</div>
 					</div>
-					<div class="status high-score || js-status">High Score:</div>
 				</div>
 			</section>
-			<section class="game-screen || margin-top | js-game-section padding-inline">
-				<div class="game-grid container || grid | js-grid"></div>
+			<section class="game-screen || padding-top padding-inline">
+				<div class="game-grid container || grid | js-grid margin-inline-auto"></div>
 			</section>
 			<section class="buttons || margin-top">
-				<div class="game-buttons container || flex-even-col | js-btns">
+				<div class="game-buttons container || flex-even-col padding-bottom | js-btns">
 					<div class="round-buttons container || flex-col | js-game-btns">
 						<button class="game-button || js-btn-reset">Reset Board</button>
 						<button class="game-button || js-btn-new">New Board</button>

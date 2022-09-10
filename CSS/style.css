@@ -23,7 +23,7 @@
 	--clr-bg-goal: #ffa630;
 	--clr-text-goal: white;
 
-	--clr-text-knight: green;
+	--clr-text-knight: #386641;
 
 	/* Font Family */
 	--ff-accent-1: "Ampun Bang", sans-serif;
@@ -40,6 +40,7 @@
 
 	/* Font Weight */
 	--fw-number: 400;
+	--fw-800: 800;
 
 	/* Margin and Padding */
 	--flexr-gap: 1rem;
@@ -62,16 +63,15 @@
 }
 
 * {
-	outline: 1px solid red;
+	/* outline: 1px solid red; */
 }
 
 body {
 	background-color: var(--clr-default-bg);
 	color: var(--clr-default-text);
-	max-width: 80rem;
+	max-width: 55rem;
 	margin-inline: auto;
 	font-family: var(--ff-body);
-	/* border: 1px solid red; */
 }
 
 .status,
@@ -87,7 +87,7 @@ main {
 button {
 	display: block;
 	cursor: pointer;
-	width: clamp(8rem, 30vw, 12rem);
+	width: clamp(8rem, 30vw, 14rem);
 	font-size: var(--fs-text);
 	background-color: var(--clr-bg-button);
 	color: var(--clr-text-button);
@@ -138,6 +138,10 @@ button:hover {
 	margin-top: var(--margin-medium);
 }
 
+.margin-inline-auto {
+	margin-inline: auto;
+}
+
 .padding-inline {
 	padding-inline: var(--padding-medium);
 }
@@ -156,10 +160,30 @@ button:hover {
 	font-size: 2rem;
 }
 
+.js-off {
+	display: none;
+}
+
+.knight-right {
+	transform: translate(100%, 0%);
+}
+
+.knight-down {
+	transform: translate(0%, 100%);
+}
+
 /* Specific classes */
 .title {
 	font-size: var(--fs-large);
 	text-align: center;
+}
+
+.tutorial {
+	font-family: var(--ff-number);
+	font-weight: var(--fw-number);
+	font-size: var(--fs-grid);
+	line-height: 1.25;
+	color: var(--clr-text-accent);
 }
 
 .round-buttons,
@@ -172,8 +196,7 @@ button:hover {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
-	max-width: 40rem;
-	margin-inline: auto;
+	max-width: 50rem;
 	/* padding: var(--margin-medium); */
 }
 
@@ -260,14 +283,6 @@ img[class^="svg"]:not(.svg-knight):hover {
 	transition: transform 500ms;
 }
 
-.knight-right {
-	transform: translate(100%, 0%);
-}
-
-.knight-down {
-	transform: translate(0%, 100%);
-}
-
 .victory-screen {
 	position: absolute;
 	z-index: 10;
@@ -285,17 +300,22 @@ img[class^="svg"]:not(.svg-knight):hover {
 	/* flex-grow: 1; */
 }
 
-.js-off {
-	display: none;
-}
+@media (max-width: 24em) {
+	:root {
+		--fs-large: 2.25rem;
+		--fs-text: 1.25rem;
+	}
 
-@media (max-width: 22em) {
 	.flex-even-col {
 		flex-direction: column;
 	}
+
+	.tutorial {
+		font-size: var(--fs-text);
+	}
 }
 
-@media (min-width: 500px) {
+@media (min-width: 34em) {
 	:root {
 		--fw-number: 700;
 		--fs-large: 3rem;
@@ -310,11 +330,5 @@ img[class^="svg"]:not(.svg-knight):hover {
 		--fs-grid: 2rem;
 		--fs-text: 2rem;
 		--padding-medium: 2.5rem;
-	}
-}
-
-@media (min-width: 1100px) {
-	.game-grid {
-		margin-inline: 0;
 	}
 }
