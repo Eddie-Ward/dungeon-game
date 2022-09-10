@@ -94,7 +94,7 @@ let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
-let currentHP = calcStartHP(currentGrid);
+let currentHP = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
 // 	row.forEach((tile) => {
@@ -156,7 +156,7 @@ function createGrid(row: number, col: number): Tile[][] {
 	return gameMatrix;
 }
 
-function calcStartHP(grid: Tile[][]): number {
+function calcGrid(grid: Tile[][]): number {
 	const n = grid[0].length;
 	const m = grid.length;
 	const row: number[] = new Array(n + 1);
@@ -349,7 +349,7 @@ function resetBoard() {
 
 	// Reset position and HP
 	currentPos = START;
-	currentHP = calcStartHP(currentGrid);
+	currentHP = calcGrid(currentGrid);
 
 	// Deleting the existing grid on the DOM
 	while (gridEl.firstChild) {
