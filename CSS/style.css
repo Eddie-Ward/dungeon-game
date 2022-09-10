@@ -1,48 +1,91 @@
 /* Root variables */
 :root {
 	/* Colors */
-	--clr-background: black;
-	--clr-foreground: white;
-	--clr-dungeon-square: coral;
-	--clr-dungeon-square-path: brown;
-	--clr-dungeon-square-start: green;
-	--clr-dungeon-square-goal: blue;
+	--clr-default-bg: #ffd3ba;
+	--clr-default-text: black;
+	--clr-bg-accent: #ffbe99;
+	--clr-text-accent: #6a2532;
+	--clr-bg-button: #ffb185;
+	--clr-border-button: #ff7e33;
+	--clr-text-button: #3d1600;
+	--clr-bg-start: #ffa630;
+	--clr-text-start: lightgray;
+
+	--clr-bg-selected: brown;
+	--clr-text-selected: darkgray;
+
+	--clr-text-health: #386641;
+	--clr-bg-health: #6d9b56;
+
+	--clr-text-enemy: #6a2532;
+	--clr-bg-enemy: #cb6792;
+
+	--clr-bg-goal: #ffa630;
+	--clr-text-goal: white;
+
+	--clr-text-knight: green;
 
 	/* Font Family */
-	--ff-accent-1: "Abril Fatface", cursive;
-	--ff-accent-2: "Uncial Antiqua", cursive;
-	--ff-body: ;
-	--ff-button: ;
+	--ff-accent-1: "a Ampun Bang", sans-serif;
+	--ff-accent-2: sans-serif;
+	--ff-body: "Coda", sans-serif;
+	--ff-number: "Passion One", cursive;
+	--ff-button: "Coda", sans-serif;
 
 	/* Font Size */
-	--fs-large: 4rem;
-	--fs-medium: 2.5rem;
-	--fs-body: 1.5rem;
-	--fs-small: 1rem;
+	--fs-large: 2.5em;
+	--fs-grid: 1.5em;
+	--fs-text: 1.25em;
+	--fs-small: 1em;
+
+	/* Font Weight */
+	--fw-number: 400;
 
 	/* Margin and Padding */
-	--fr-gap: 1em;
-	--fc-gap: 1em;
+	--flexr-gap: 1em;
+	--flexc-gap: 1em;
 
+	--margin-small: 0.75em;
 	--margin-medium: 1.5em;
 
-	/* Content dimensions */
-	--dim-grid: 80vmin;
+	--padding-small: 1em;
+	--padding-medium: 1.5em;
+	--padding-large: 3em;
 }
 
 /* General formatting */
-* {
-	background-color: black;
-	color: white;
-}
 body {
-	margin: var(--margin-medium);
-	font-size: var(--fs-body);
+	background-color: var(--clr-default-bg);
+	color: var(--clr-default-text);
+	max-width: 80em;
+	margin-inline: auto;
+	font-family: var(--ff-body);
+	/* border: 1px solid red; */
+}
+
+.status,
+h2,
+p:not(.text-value-knight, .text-value-start) {
+	font-size: var(--fs-text);
+}
+
+main {
+	position: relative;
 }
 
 button {
 	display: block;
-	width: clamp(8rem, 28vw, 25rem);
+	cursor: pointer;
+	width: clamp(8em, 25vw, 10em);
+	font-size: var(--fs-text);
+	background-color: var(--clr-bg-button);
+	color: var(--clr-text-button);
+	border: 0px solid var(--clr-border-button);
+	transition: all 250ms;
+}
+
+button:hover {
+	background-color: var(--clr-border-button);
 }
 
 /* Utility classes */
@@ -50,14 +93,15 @@ button {
 .flex {
 	display: flex;
 	flex-direction: row;
-	/* flex-wrap: wrap; */
-	gap: var(--fr-gap);
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--flexr-gap);
 }
 
 .flex-col {
 	display: flex;
 	flex-direction: column;
-	gap: var(--fc-gap);
+	gap: var(--flexc-gap);
 }
 
 .flex > *,
@@ -70,16 +114,30 @@ button {
 }
 
 .margin-top {
-	margin-top: var(--margin-medium);
+	margin-top: var(--margin-small);
 }
 
-.font-accent {
+.padding-inline {
+	padding-inline: var(--padding-medium);
+}
+
+.padding-top {
+	padding-top: var(--padding-medium);
+}
+
+.padding-bottom {
+	padding-bottom: var(--padding-medium);
+}
+
+.font-accent-one {
 	font-family: var(--ff-accent-1);
+	color: var(--clr-text-accent);
+	font-size: 2em;
 }
 
 /* Specific classes */
 .title {
-	font-size: var(--fs-medium);
+	font-size: var(--fs-large);
 	text-align: center;
 }
 
@@ -93,35 +151,43 @@ button {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
-	max-width: 30em;
+	max-width: 40em;
+	margin-inline: auto;
 	/* padding: var(--margin-medium); */
 }
 
 div[class^="tile"] {
 	text-align: center;
 	position: relative;
+	font-family: var(--ff-number);
+	font-weight: var(--fw-number);
+	font-size: var(--fs-grid);
 }
 
 .tile-health {
-	background-color: darkgreen;
+	background-color: var(--clr-bg-health);
+	color: var(--clr-text-health);
 }
 
 .tile-enemy {
-	background-color: darkred;
-	text-align: right;
+	background-color: var(--clr-bg-enemy);
+	color: var(--clr-text-enemy);
 }
 
 .tile-start {
-	background-color: brown;
+	background-color: var(--clr-bg-start);
+	color: var(--clr-text-start);
 }
 
 .tile-finish {
-	background-color: goldenrod;
+	background-color: var(--clr-bg-goal);
+	color: var(--clr-text-goal);
 }
 
 .tile-selected img[class^="svg"]:not(.svg-knight),
-.tile-selected p[class^="text-value"]:not(.text-value-knight) {
+.tile-selected p[class^="text-value"]:not(.text-value-knight, .text-value-start) {
 	opacity: 20%;
+	color: var(--clr-text-selected);
 }
 
 p[class^="text-value"]:not(p.text-value-start, p.text-value-knight) {
@@ -131,6 +197,8 @@ p[class^="text-value"]:not(p.text-value-start, p.text-value-knight) {
 	right: 7%;
 	z-index: 1;
 	background-color: transparent;
+	font-size: inherit;
+	color: inherit;
 }
 
 p.text-value-start {
@@ -140,6 +208,7 @@ p.text-value-start {
 	transform: translate(-50%, -50%);
 	text-align: center;
 	background-color: transparent;
+	color: var(--clr-text-start);
 }
 
 p.text-value-knight {
@@ -147,11 +216,18 @@ p.text-value-knight {
 	bottom: 5%;
 	right: 5%;
 	background-color: transparent;
+	color: var(--clr-text-knight);
 }
 
 img[class^="svg"] {
-	transform: scale(0.8, 0.8);
+	transform: scale(0.6, 0.6);
+	transition: transform 250ms;
 	background-color: transparent;
+	/* margin: auto auto; */
+}
+
+img[class^="svg"]:not(.svg-knight):hover {
+	transform: scale(0.8, 0.8);
 	/* margin: auto auto; */
 }
 
@@ -169,4 +245,49 @@ img[class^="svg"] {
 
 .knight-down {
 	transform: translate(0%, 100%);
+}
+
+.victory-screen {
+	position: absolute;
+	z-index: 10;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: clamp(1.5em, 75vw, 28em);
+	background-color: var(--clr-bg-accent);
+	border: 5px solid var(--clr-border-button);
+	text-align: center;
+}
+
+.victory-button {
+	max-width: 10em;
+	/* flex-grow: 1; */
+}
+
+.js-off {
+	display: none;
+}
+
+@media (min-width: 500px) {
+	:root {
+		--fw-number: 700;
+		--fs-large: 3em;
+		--fs-grid: 2em;
+		--fs-text: 1.5em;
+	}
+}
+
+@media (min-width: 700px) {
+	:root {
+		--fs-large: 4em;
+		--fs-grid: 2em;
+		--fs-text: 2em;
+		--padding-medium: 2.5em;
+	}
+}
+
+@media (min-width: 1100px) {
+	.game-grid {
+		margin-inline: 0;
+	}
 }

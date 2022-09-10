@@ -42,20 +42,18 @@ const STATUSES = {
     HP: 1,
     SCORE: 2,
 };
-const HIGHEST_VALUE = 16;
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
 const reaper = new Sprite("reaper");
 const dragon = new Sprite("dragon");
 const ENEMIES = [spider, orc, reaper, dragon];
-const ENEMIES_RANK = Math.floor(HIGHEST_VALUE / ENEMIES.length);
 const meat = new Sprite("meat");
 const potion = new Sprite("potion");
 const HEALTH = [meat, potion];
-const HEALTH_RANK = Math.floor(HIGHEST_VALUE / HEALTH.length);
 const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
+const TILE_CONTENT = ["enemy", "potion"];
 const inputStartingHP = 10;
 const inputContent = [
     ["start", "potion", "enemy", "potion"],
@@ -69,41 +67,104 @@ const inputValues = [
     [6, 2, 9, 3],
     [9, 3, 8, 0],
 ];
-//Query select DOM elements
+// Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status");
 const gridEl = document.querySelector(".js-grid");
 const gameSectionEl = document.querySelector(".js-game-section");
+const btnsResetEl = document.querySelectorAll(".js-btn-reset");
+const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
-const btnResetEl = document.querySelector(".js-btn-reset");
-const btnDifficultyEl = document.querySelector(".js-btn-diff");
-const btnDevModeEl = document.querySelector(".js-btn-dev");
-//Initialize global variables
-let currentHP = inputStartingHP;
+const btnDiffEl = document.querySelector(".js-btn-diff");
+const victoryScreenEl = document.querySelector(".js-victory");
+// Initialize global variables
 let currentPos = START;
-let matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+let diffWeight = [0.75, 0.25];
+let maxValueEnemy = 16;
+let maxValueHealth = 8;
+let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
+let healthRank = Math.floor(maxValueHealth / HEALTH.length);
+// Create matrix and knight in model
+let currentGrid = createGrid(4, 4);
+let currentHP = calcStartHP(currentGrid);
 let knightEl = createKnight(knight);
-renderGrid(matrixGrid, gridEl);
-console.log(gridEl.firstElementChild);
-// knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
-// knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
-statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
-gridEl.addEventListener("click", onTileClick);
-btnResetEl?.addEventListener("click", resetBoard);
-// window.addEventListener("resize", () => {
-// 	knightEl.style.width = getComputedStyle(knightEl.parentElement as HTMLElement).width;
-// 	knightEl.style.height = getComputedStyle(knightEl.parentElement as HTMLElement).height;
+// currentGrid.forEach((row) => {
+// 	row.forEach((tile) => {
+// 		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
+// 	});
 // });
+// Render grid and current HP to DOM
+renderGrid(currentGrid, gridEl);
+statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+// Add event listeners
+gridEl.addEventListener("click", onTileClick);
+for (const btn of btnsResetEl) {
+    btn.addEventListener("click", resetBoard);
+}
+for (const btn of btnsNewEl) {
+    btn.addEventListener("click", newBoard);
+}
+function randWeight(weight) {
+    let random = Math.random();
+    for (let i = 0; i < weight.length; i++) {
+        if (random < weight[i]) {
+            return i;
+        }
+        else {
+            random -= weight[i];
+        }
+    }
+    return 0;
+}
+function randRange(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
+}
 function createGrid(row, col) {
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
         const gameRow = [];
         for (let j = 0; j < col; j++) {
-            const tile = new Tile({ y: i, x: j }, inputContent[i][j], inputValues[i][j]);
-            gameRow.push(tile);
+            let tile;
+            if (i === START.y && j === START.x) {
+                tile = new Tile(START, "start", 0);
+            }
+            else if (i === row - 1 && j === col - 1) {
+                tile = new Tile({ y: i, x: j }, "finish", 0);
+            }
+            else {
+                const index = randWeight(diffWeight);
+                const maxValues = [maxValueEnemy, maxValueHealth];
+                tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
+            }
+            if (tile) {
+                gameRow.push(tile);
+            }
+            else {
+                alert("Failed to generate tile");
+            }
         }
         gameMatrix.push(gameRow);
     }
     return gameMatrix;
+}
+function calcStartHP(grid) {
+    const n = grid[0].length;
+    const m = grid.length;
+    const row = new Array(n + 1);
+    const dp = new Array(m + 1);
+    dp.fill(row.fill(Infinity));
+    for (let y = m - 1; y >= 0; y--) {
+        for (let x = n - 1; x >= 0; x--) {
+            if (y === m - 1 && x === n - 1) {
+                dp[y][x] = 0;
+            }
+            else {
+                const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
+                dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
+                console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
+            }
+        }
+    }
+    return dp[0][0] + 1;
 }
 function createKnight(sprite) {
     const knightContainer = document.createElement("div");
@@ -137,30 +198,33 @@ function renderTile(tile) {
     container.dataset.X = tile.pos.x.toString();
     container.dataset.Y = tile.pos.y.toString();
     if (tile.content === "enemy") {
-        svgSprite = renderSprite(svgSprite, ENEMIES, Math.floor(tile.value / ENEMIES_RANK), tile.value);
+        svgSprite = renderSprite(svgSprite, ENEMIES, Math.floor(tile.value / enemiesRank), tile.value);
         valueText.innerText = `-${tile.value}`;
         valueText.classList.add("text-value-enemy");
         container.classList.add("tile-enemy");
     }
     else if (tile.content === "potion") {
-        svgSprite = renderSprite(svgSprite, HEALTH, Math.floor(tile.value / HEALTH_RANK), tile.value);
+        svgSprite = renderSprite(svgSprite, HEALTH, Math.floor(tile.value / healthRank), tile.value);
         valueText.innerText = `+${tile.value}`;
         valueText.classList.add("text-value-health");
         container.classList.add("tile-health");
     }
     else if (tile.content === "start") {
+        //Add start text to the tile if it is the start tile
         valueText.innerText = `Start`;
         valueText.classList.add("text-value-start");
         container.classList.add("tile-start");
         container.classList.add("tile-selected");
     }
     else if (tile.content === "finish") {
+        //Add treasure chest to the tile if it is the finish tile
         svgSprite = renderSprite(svgSprite, GOAL, 0);
         valueText.innerText = "Goal";
         valueText.classList.add("text-value-goal");
         container.classList.add("tile-finish");
     }
     if (tile.content === "start") {
+        //Add knight to the tile if it is the start tile
         container.appendChild(knightEl);
     }
     else {
@@ -183,8 +247,10 @@ function renderGrid(matrix, grid_element) {
     }
 }
 function renderVictory() {
-    alert("Victory!");
-    resetBoard();
+    console.log("Victory!");
+    if (victoryScreenEl.classList.contains("js-off")) {
+        victoryScreenEl.classList.remove("js-off");
+    }
 }
 function renderKnight(direction, target) {
     knightEl.classList.add(`knight-${direction}`);
@@ -228,7 +294,7 @@ function onTileClick(event) {
         const targetPos = { y: parseInt(target.dataset.Y), x: parseInt(target.dataset.X) };
         const direction = moveIsValid(currentPos, targetPos);
         if (direction) {
-            const newHP = processHP(currentHP, currentPos, targetPos, matrixGrid);
+            const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
             if (newHP) {
                 currentPos = targetPos;
                 currentHP = newHP;
@@ -249,15 +315,24 @@ function onTileClick(event) {
     }
 }
 function resetBoard() {
+    if (!victoryScreenEl.classList.contains("js-off")) {
+        victoryScreenEl.classList.add("js-off");
+    }
+    // Reset position and HP
     currentPos = START;
-    currentHP = inputStartingHP;
-    matrixGrid = createGrid(inputValues.length, inputValues[0].length);
+    currentHP = calcStartHP(currentGrid);
+    // Deleting the existing grid on the DOM
     while (gridEl.firstChild) {
         gridEl.removeChild(gridEl.firstChild);
     }
+    // Recreate knight element, but not assigned to any children yet.
     knightEl = createKnight(knight);
-    console.log(knightEl);
-    renderGrid(matrixGrid, gridEl);
+    // Render new grid on DOM, with knight element
+    renderGrid(currentGrid, gridEl);
+    // Render HP on DOM
     statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
-    console.log(knightEl);
+}
+function newBoard() {
+    currentGrid = createGrid(4, 4);
+    resetBoard();
 }
