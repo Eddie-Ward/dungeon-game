@@ -35,6 +35,15 @@ class Tile {
 	}
 }
 
+class listNode {
+	constructor(public value: any, public next: listNode | null) {}
+}
+
+const head = new listNode(5, null);
+const next_node = new listNode(7, null);
+head.next = next_node;
+console.log(`${head} is pointing to ${head.next}`);
+
 const START: Coord = { y: 0, x: 0 };
 const STATUSES = {
 	TIME: 0,
@@ -169,7 +178,7 @@ function calcGrid(grid: Tile[][]): number {
 			} else {
 				const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
 				dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
-				console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
+				// console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
 			}
 		}
 	}

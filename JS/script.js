@@ -36,6 +36,18 @@ class Tile {
         return this._value;
     }
 }
+class listNode {
+    value;
+    next;
+    constructor(value, next) {
+        this.value = value;
+        this.next = next;
+    }
+}
+const head = new listNode(5, null);
+const next_node = new listNode(7, null);
+head.next = next_node;
+console.log(`${head} is pointing to ${head.next}`);
 const START = { y: 0, x: 0 };
 const STATUSES = {
     TIME: 0,
@@ -85,7 +97,7 @@ let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
 let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
-let currentHP = calcStartHP(currentGrid);
+let currentHP = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
 // 	row.forEach((tile) => {
@@ -146,7 +158,7 @@ function createGrid(row, col) {
     }
     return gameMatrix;
 }
-function calcStartHP(grid) {
+function calcGrid(grid) {
     const n = grid[0].length;
     const m = grid.length;
     const row = new Array(n + 1);
@@ -160,7 +172,7 @@ function calcStartHP(grid) {
             else {
                 const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
                 dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
-                console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
+                // console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
             }
         }
     }
@@ -320,7 +332,7 @@ function resetBoard() {
     }
     // Reset position and HP
     currentPos = START;
-    currentHP = calcStartHP(currentGrid);
+    currentHP = calcGrid(currentGrid);
     // Deleting the existing grid on the DOM
     while (gridEl.firstChild) {
         gridEl.removeChild(gridEl.firstChild);
