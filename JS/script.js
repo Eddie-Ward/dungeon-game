@@ -77,7 +77,6 @@ const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
 const victoryScreenEl = document.querySelector(".js-victory");
 // Initialize global variables
-let currentHP = inputStartingHP;
 let currentPos = START;
 let diffWeight = [0.75, 0.25];
 let maxValueEnemy = 16;
@@ -86,6 +85,7 @@ let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
 let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
+let currentHP = calcStartHP(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
 // 	row.forEach((tile) => {
@@ -146,7 +146,26 @@ function createGrid(row, col) {
     }
     return gameMatrix;
 }
-function calcStartHP(grid) { }
+function calcStartHP(grid) {
+    const n = grid[0].length;
+    const m = grid.length;
+    const row = new Array(n + 1);
+    const dp = new Array(m + 1);
+    dp.fill(row.fill(Infinity));
+    for (let y = m - 1; y >= 0; y--) {
+        for (let x = n - 1; x >= 0; x--) {
+            if (y === m - 1 && x === n - 1) {
+                dp[y][x] = 0;
+            }
+            else {
+                const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
+                dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
+                console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
+            }
+        }
+    }
+    return dp[0][0] + 1;
+}
 function createKnight(sprite) {
     const knightContainer = document.createElement("div");
     const knightSVG = document.createElement("img");
@@ -301,7 +320,7 @@ function resetBoard() {
     }
     // Reset position and HP
     currentPos = START;
-    currentHP = inputStartingHP;
+    currentHP = calcStartHP(currentGrid);
     // Deleting the existing grid on the DOM
     while (gridEl.firstChild) {
         gridEl.removeChild(gridEl.firstChild);
