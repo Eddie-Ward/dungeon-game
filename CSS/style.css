@@ -63,7 +63,9 @@ body {
 	/* border: 1px solid red; */
 }
 
-.status {
+.status,
+h2,
+p:not(.text-value-knight, .text-value-start) {
 	font-size: var(--fs-text);
 }
 
@@ -73,11 +75,17 @@ main {
 
 button {
 	display: block;
+	cursor: pointer;
 	width: clamp(8em, 25vw, 10em);
 	font-size: var(--fs-text);
 	background-color: var(--clr-bg-button);
 	color: var(--clr-text-button);
-	border: 5px solid var(--clr-border-button);
+	border: 0px solid var(--clr-border-button);
+	transition: all 250ms;
+}
+
+button:hover {
+	background-color: var(--clr-border-button);
 }
 
 /* Utility classes */
@@ -144,6 +152,7 @@ button {
 	background-color: azure;
 	aspect-ratio: 1;
 	max-width: 40em;
+	margin-inline: auto;
 	/* padding: var(--margin-medium); */
 }
 
@@ -212,7 +221,13 @@ p.text-value-knight {
 
 img[class^="svg"] {
 	transform: scale(0.6, 0.6);
+	transition: transform 250ms;
 	background-color: transparent;
+	/* margin: auto auto; */
+}
+
+img[class^="svg"]:not(.svg-knight):hover {
+	transform: scale(0.8, 0.8);
 	/* margin: auto auto; */
 }
 
@@ -268,5 +283,11 @@ img[class^="svg"] {
 		--fs-grid: 2em;
 		--fs-text: 2em;
 		--padding-medium: 2.5em;
+	}
+}
+
+@media (min-width: 1100px) {
+	.game-grid {
+		margin-inline: 0;
 	}
 }

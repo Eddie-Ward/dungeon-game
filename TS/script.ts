@@ -85,7 +85,7 @@ const victoryScreenEl = document.querySelector(".js-victory") as HTMLDivElement;
 // Initialize global variables
 let currentHP = inputStartingHP;
 let currentPos = START;
-let diffWeight = [0.6, 0.4];
+let diffWeight = [0.75, 0.25];
 
 let maxValueEnemy = 16;
 let maxValueHealth = 8;
@@ -95,13 +95,12 @@ let healthRank = Math.floor(maxValueHealth / HEALTH.length);
 
 // Create matrix and knight in model
 let currentGrid = createGrid(4, 4);
-currentGrid.forEach((row) => {
-	row.forEach((tile) => {
-		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
-	});
-});
-let prevGrid = backupGrid(currentGrid);
 let knightEl = createKnight(knight);
+// currentGrid.forEach((row) => {
+// 	row.forEach((tile) => {
+// 		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
+// 	});
+// });
 
 // Render grid and current HP to DOM
 renderGrid(currentGrid, gridEl);
@@ -157,9 +156,7 @@ function createGrid(row: number, col: number): Tile[][] {
 	return gameMatrix;
 }
 
-function backupGrid(curGrid: Tile[][]) {
-	return curGrid;
-}
+function calcStartHP(grid: Tile[][]) {}
 
 function createKnight(sprite: Sprite): HTMLDivElement {
 	const knightContainer = document.createElement("div");
