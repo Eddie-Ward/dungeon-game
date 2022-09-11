@@ -6,6 +6,35 @@ interface Coord {
 type Content = "potion" | "enemy" | "start" | "finish";
 type Direction = "right" | "down" | "end";
 
+class Level {
+	constructor(
+		protected _index: number,
+		protected _dimGrid: number,
+		protected _randWeight: number[],
+		protected _maxValueEnemy: number,
+		protected _maxValueHealth: number,
+		protected _scoreMulti: number
+	) {}
+	get index() {
+		return this._index;
+	}
+	get dimGrid() {
+		return this._dimGrid;
+	}
+	get randWeight() {
+		return this._randWeight;
+	}
+	get maxValueEnemy() {
+		return this._maxValueEnemy;
+	}
+	get maxValueHealth() {
+		return this._maxValueHealth;
+	}
+	get scoreMulti() {
+		return this._scoreMulti;
+	}
+}
+
 class Sprite {
 	constructor(protected _type: string) {}
 
@@ -36,10 +65,6 @@ class Tile {
 	}
 }
 
-class ListNode {
-	constructor(public value: any, public next: ListNode | null, public dir: Direction | null) {}
-}
-
 const START: Coord = { y: 0, x: 0 };
 const STATUSES = {
 	HP: 0,
@@ -61,46 +86,36 @@ const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 
 const TILE_CONTENT: Content[] = ["enemy", "potion"];
+const LVL_NAMES = ["Easy", "Medium", "Hard"];
 
-const inputStartingHP = 10;
-const inputContent = [
-	["start", "potion", "enemy", "potion"],
-	["enemy", "enemy", "potion", "enemy"],
-	["enemy", "enemy", "enemy", "enemy"],
-	["potion", "enemy", "enemy", "finish"],
-];
-const inputValues = [
-	[inputStartingHP, 1, 7, 2],
-	[4, 1, 4, 10],
-	[6, 2, 9, 3],
-	[9, 3, 8, 0],
-];
+const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
+const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
+const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
+
+const levels = [EASY, MEDIUM, HARD];
 
 // Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
 const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
 const btnsResetEl = document.querySelectorAll(".js-btn-reset") as NodeListOf<HTMLButtonElement>;
 const btnsNewEl = document.querySelectorAll(".js-btn-new") as NodeListOf<HTMLButtonElement>;
-const btnHintEl = document.querySelector(".js-btn-hint");
-const btnDiffEl = document.querySelector(".js-btn-diff");
+const btnHintEl = document.querySelector(".js-btn-hint") as HTMLButtonElement;
+const btnDiffEl = document.querySelector(".js-btn-diff") as HTMLButtonElement;
 const victoryScreenEl = document.querySelector(".js-victory") as HTMLDivElement;
 const victoryMessageEl = document.querySelector(".js-victory-message") as HTMLParagraphElement;
 
-console.log(statusesEl[STATUSES.HP]);
-console.log(statusesEl[STATUSES.SCORE]);
-
 // Initialize global variables
 let currentPos = START;
-let diffWeight = [0.75, 0.25];
+let currentLevel = levels[0];
 
-let maxValueEnemy = 16;
-let maxValueHealth = 8;
+let curMaxEnemy = currentLevel.maxValueEnemy;
+let curMaxHealth = currentLevel.maxValueHealth;
 
-let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
-let healthRank = Math.floor(maxValueHealth / HEALTH.length);
+let enemiesRank = Math.floor(curMaxEnemy / ENEMIES.length);
+let healthRank = Math.floor(curMaxHealth / HEALTH.length);
 
 // Create matrix and knight in model
-let currentGrid = createGrid(4, 4);
+let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
 let [currentHP, mapPaths] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
@@ -123,6 +138,13 @@ for (const btn of btnsResetEl) {
 for (const btn of btnsNewEl) {
 	btn.addEventListener("click", newBoard);
 }
+btnDiffEl.addEventListener("mouseover", () => {
+	btnDiffEl.innerText = `Try ${LVL_NAMES[currentLevel.index === 2 ? 0 : currentLevel.index + 1]}`;
+});
+btnDiffEl.addEventListener("mouseout", () => {
+	btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
+});
+btnDiffEl.addEventListener("click", changeLevel);
 
 function randWeight(weight: number[]): number {
 	let random = Math.random();
@@ -141,6 +163,7 @@ function randRange(min: number, max: number): number {
 }
 
 function createGrid(row: number, col: number): Tile[][] {
+	console.log(`Generating ${row} by ${col} grid`);
 	const gameMatrix: Tile[][] = [];
 	for (let i = 0; i < row; i++) {
 		const gameRow: Tile[] = [];
@@ -151,8 +174,8 @@ function createGrid(row: number, col: number): Tile[][] {
 			} else if (i === row - 1 && j === col - 1) {
 				tile = new Tile({ y: i, x: j }, "finish", 0);
 			} else {
-				const index = randWeight(diffWeight);
-				const maxValues = [maxValueEnemy, maxValueHealth];
+				const index = randWeight(currentLevel.randWeight);
+				const maxValues = [curMaxEnemy, curMaxHealth];
 				tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
 			}
 			if (tile) {
@@ -195,7 +218,7 @@ function calcGrid(grid: Tile[][]): [number, Direction[][]] {
 		}
 		paths.unshift(pathsRow);
 	}
-	return [dp[0][0] + 1, paths];
+	return [dp[0][0] + 3 - currentLevel.index, paths];
 }
 
 function createKnight(sprite: Sprite): HTMLDivElement {
@@ -313,6 +336,10 @@ function renderVictory() {
 	}
 }
 
+function renderDefeat() {
+	console.log("Defeat");
+}
+
 function renderPath(gridEl: HTMLElement[][], path: Direction[][]) {
 	let [i, j] = [0, 0];
 	let curNode = path[i][j];
@@ -405,6 +432,13 @@ function resetBoard() {
 }
 
 function newBoard() {
-	currentGrid = createGrid(4, 4);
+	currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
 	resetBoard();
+}
+
+function showHint() {}
+
+function changeLevel() {
+	currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
+	newBoard();
 }

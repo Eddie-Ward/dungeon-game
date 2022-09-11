@@ -50,7 +50,7 @@
 	--margin-medium: 1.5rem;
 
 	--padding-small: 1rem;
-	--padding-medium: 2rem;
+	--padding-medium: 0.75rem;
 	--padding-large: 3rem;
 }
 
@@ -60,10 +60,6 @@
 	font-style: normal;
 	font-weight: 400;
 	src: url("https://fonts.cdnfonts.com/s/47799/AmpunBang-PKXL2.woff") format("woff");
-}
-
-* {
-	/* outline: 1px solid red; */
 }
 
 body {
@@ -76,7 +72,7 @@ body {
 
 .status,
 h2,
-p:not(.text-value-knight, .text-value-start) {
+p:not(.text-value-knight, .text-value-start, .text-value-health, .text-value-enemy, .text-value-goal) {
 	font-size: var(--fs-text);
 }
 
@@ -87,7 +83,7 @@ main {
 button {
 	display: block;
 	cursor: pointer;
-	width: clamp(8rem, 30vw, 14rem);
+	width: clamp(8rem, 30vw, 16rem);
 	font-size: var(--fs-text);
 	background-color: var(--clr-bg-button);
 	color: var(--clr-text-button);
@@ -234,19 +230,21 @@ div[class^="tile"] {
 	color: var(--clr-text-selected);
 }
 
-p[class^="text-value"]:not(p.text-value-start, p.text-value-knight) {
-	/* float: right; */
+/* Enemy and Health Values Numbers */
+p:where(.text-value-enemy, .text-value-health, .text-value-goal) {
 	position: absolute;
 	top: 5%;
 	right: 7%;
 	z-index: 1;
 	background-color: transparent;
-	font-size: inherit;
 	color: inherit;
+	font-size: inherit;
+	pointer-events: none;
 }
 
 p.text-value-start {
 	position: absolute;
+	z-index: 0;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -267,12 +265,10 @@ img[class^="svg"] {
 	transform: scale(0.6, 0.6);
 	transition: transform 250ms;
 	background-color: transparent;
-	/* margin: auto auto; */
 }
 
 img[class^="svg"]:not(.svg-knight):hover {
-	transform: scale(0.8, 0.8);
-	/* margin: auto auto; */
+	transform: scale(0.9, 0.9);
 }
 
 .container-knight {
@@ -289,15 +285,14 @@ img[class^="svg"]:not(.svg-knight):hover {
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	width: clamp(1.5rem, 75vw, 28rem);
+	width: clamp(1.5rem, 75vw, 30rem);
 	background-color: var(--clr-bg-accent);
 	border: 5px solid var(--clr-border-button);
 	text-align: center;
 }
 
 .victory-button {
-	max-width: 10rem;
-	/* flex-grow: 1; */
+	max-width: 12rem;
 }
 
 @media (max-width: 24em) {
@@ -313,13 +308,29 @@ img[class^="svg"]:not(.svg-knight):hover {
 	.tutorial {
 		font-size: var(--fs-text);
 	}
+
+	.victory-buttons {
+		align-items: center;
+	}
+
+	p:where(.text-value-enemy, .text-value-health, .text-value-goal, .text-value-knight, .text-value-start, .text-value-goal) {
+		top: 50%;
+		left: 47%;
+		font-size: 1.25rem;
+		transform: translate(-50%, -50%);
+		text-align: center;
+	}
+
+	.text-value-goal {
+		left: 42%;
+	}
 }
 
 @media (min-width: 34em) {
 	:root {
 		--fw-number: 700;
 		--fs-large: 3rem;
-		--fs-grid: 2rem;
+		--fs-grid: 1.5rem;
 		--fs-text: 1.5rem;
 	}
 }
@@ -327,7 +338,7 @@ img[class^="svg"]:not(.svg-knight):hover {
 @media (min-width: 700px) {
 	:root {
 		--fs-large: 4rem;
-		--fs-grid: 2rem;
+		--fs-grid: 2.25rem;
 		--fs-text: 2rem;
 		--padding-medium: 2.5rem;
 	}
