@@ -87,7 +87,7 @@ const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 const TILE_CONTENT = ["enemy", "potion"];
-const LVL_NAMES = ["Easy", "Medium", "Hard"];
+const LVL_NAMES = ["Easy", "Mid", "Hard"];
 const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
 const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
 const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
@@ -404,5 +404,6 @@ function newBoard() {
 function showHint() { }
 function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
+    btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
     newBoard();
 }

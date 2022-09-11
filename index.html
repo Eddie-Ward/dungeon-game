@@ -7,7 +7,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Passion+One:wght@400;700&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Henny+Penny&family=Passion+One:wght@400;700&display=swap"
 			rel="stylesheet" />
 		<link rel="stylesheet" href="CSS/reset.css" />
 		<link rel="stylesheet" href="CSS/style.css" />
@@ -16,26 +16,26 @@
 	</head>
 	<body>
 		<header>
-			<div class="title | font-accent-one padding-top padding-inline">
+			<div class="title | font-accent-one padding-top-small padding-inline">
 				<h1>Dungeon Tiles</h1>
 			</div>
 		</header>
 		<main>
-			<section class="status-bar || padding-inline padding-top">
+			<section class="status-bar || padding-inline padding-top-small">
 				<div class="game-status container">
 					<div class="status tutorial ||">Reach the goal without hitting 0 HP!</div>
 					<div class="status tutorial ||">You can only move down or right.</div>
-					<div class="round-status container || flex-even-col margin-top">
+					<div class="round-status container || flex-row margin-top">
 						<div class="status hp-left || js-status">HP:</div>
 						<div class="status high-score || js-status">Score:</div>
 					</div>
 				</div>
 			</section>
-			<section class="game-screen || padding-top padding-inline">
+			<section class="game-screen || padding-top-medium padding-inline">
 				<div class="game-grid container || grid | js-grid margin-inline-auto"></div>
 			</section>
 			<section class="buttons || margin-top">
-				<div class="game-buttons container || flex-even-col padding-bottom | js-btns">
+				<div class="game-buttons container || flex-row padding-bottom padding-top-medium | js-btns">
 					<div class="round-buttons container || flex-col | js-game-btns">
 						<button class="game-button || js-btn-reset">Reset Board</button>
 						<button class="game-button || js-btn-new">New Board</button>
@@ -48,13 +48,13 @@
 			</section>
 			<section class="victory">
 				<div
-					class="victory-screen container || flex-col padding-inline padding-top padding-bottom | js-victory js-off">
+					class="victory-screen container || flex-col padding-inline padding-top-medium padding-bottom | js-victory js-off">
 					<h2 class="victory-text ||">Congratulations!</h2>
 					<div class="victory-status">
 						<p class="victory-message || js-victory-message"></p>
 					</div>
 					<p class="victory-question">What would you like to do?</p>
-					<div class="victory-buttons container || flex-even-col">
+					<div class="victory-buttons container || flex-row">
 						<button class="victory-button || js-btn-reset">Reset Board</button>
 						<button class="victory-button || js-btn-new">New Board</button>
 					</div>
