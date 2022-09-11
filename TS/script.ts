@@ -53,7 +53,12 @@ class Sprite {
 }
 
 class Tile {
-	constructor(protected _pos: Coord, protected _content: Content, protected _value: number) {}
+	constructor(
+		protected _pos: Coord,
+		protected _content: Content,
+		protected _value: number,
+		protected _dir: Direction | null
+	) {}
 	get pos() {
 		return this._pos;
 	}
@@ -62,6 +67,12 @@ class Tile {
 	}
 	get value() {
 		return this._value;
+	}
+	get dir() {
+		return this._dir;
+	}
+	set dir(value: Direction | null) {
+		this._dir = value;
 	}
 }
 
@@ -106,6 +117,7 @@ const victoryMessageEl = document.querySelector(".js-victory-message") as HTMLPa
 
 // Initialize global variables
 let currentPos = START;
+let currentHP = 0;
 let currentLevel = levels[0];
 
 let curMaxEnemy = currentLevel.maxValueEnemy;
@@ -116,35 +128,33 @@ let healthRank = Math.floor(curMaxHealth / HEALTH.length);
 
 // Create matrix and knight in model
 let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
-let [currentHP, mapPaths] = calcGrid(currentGrid);
+[currentHP, currentGrid] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
-// currentGrid.forEach((row) => {
-// 	row.forEach((tile) => {
-// 		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
-// 	});
-// });
 
 // Render grid and current HP to DOM
 let renderGridEl = renderGrid(currentGrid, gridEl);
 statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
 
-renderPath(renderGridEl, mapPaths);
+renderPath(renderGridEl, currentGrid);
 
 // Add event listeners
 gridEl.addEventListener("click", onTileClick);
+
 for (const btn of btnsResetEl) {
 	btn.addEventListener("click", resetBoard);
 }
+
 for (const btn of btnsNewEl) {
 	btn.addEventListener("click", newBoard);
 }
+
+btnDiffEl.addEventListener("click", changeLevel);
 btnDiffEl.addEventListener("mouseover", () => {
 	btnDiffEl.innerText = `Try ${LVL_NAMES[currentLevel.index === 2 ? 0 : currentLevel.index + 1]}`;
 });
 btnDiffEl.addEventListener("mouseout", () => {
 	btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 });
-btnDiffEl.addEventListener("click", changeLevel);
 
 function randWeight(weight: number[]): number {
 	let random = Math.random();
@@ -170,13 +180,13 @@ function createGrid(row: number, col: number): Tile[][] {
 		for (let j = 0; j < col; j++) {
 			let tile;
 			if (i === START.y && j === START.x) {
-				tile = new Tile(START, "start", 0);
+				tile = new Tile(START, "start", 0, null);
 			} else if (i === row - 1 && j === col - 1) {
-				tile = new Tile({ y: i, x: j }, "finish", 0);
+				tile = new Tile({ y: i, x: j }, "finish", 0, null);
 			} else {
 				const index = randWeight(currentLevel.randWeight);
 				const maxValues = [curMaxEnemy, curMaxHealth];
-				tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
+				tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]), null);
 			}
 			if (tile) {
 				gameRow.push(tile);
@@ -189,36 +199,34 @@ function createGrid(row: number, col: number): Tile[][] {
 	return gameMatrix;
 }
 
-function calcGrid(grid: Tile[][]): [number, Direction[][]] {
+function calcGrid(grid: Tile[][]): [number, Tile[][]] {
 	const n = grid[0].length;
 	const m = grid.length;
-	const paths: Direction[][] = [[]];
+
 	const row: number[] = new Array(n + 1);
 	const dp: number[][] = new Array(m + 1);
 	dp.fill(row.fill(Infinity));
+
 	for (let row = m - 1; row >= 0; row--) {
 		const pathsRow: Direction[] = [];
 		for (let col = n - 1; col >= 0; col--) {
 			if (row === m - 1 && col === n - 1) {
 				dp[row][col] = 0;
-				pathsRow.unshift("end");
 			} else {
 				const value = grid[row][col].content === "enemy" ? grid[row][col].value : grid[row][col].value * -1;
 				const down = dp[row + 1][col];
 				const right = dp[row][col + 1];
 				if (down < right) {
-					pathsRow.unshift("down");
+					grid[row][col].dir = "down";
 					dp[row][col] = Math.max(value, value + down);
 				} else {
-					pathsRow.unshift("right");
+					grid[row][col].dir = "right";
 					dp[row][col] = Math.max(value, value + right);
 				}
-				// console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
 			}
 		}
-		paths.unshift(pathsRow);
 	}
-	return [dp[0][0] + 3 - currentLevel.index, paths];
+	return [dp[0][0] + 3 - currentLevel.index, grid];
 }
 
 function createKnight(sprite: Sprite): HTMLDivElement {
@@ -328,6 +336,17 @@ function renderKnight(direction: string, target: HTMLElement) {
 	knightHP.innerText = currentHP.toString();
 }
 
+function renderShake(target: Element | null) {
+	function removeShake() {
+		if (target?.classList.contains("js-shake")) {
+			target.classList.remove("js-shake");
+		}
+	}
+	removeShake();
+	target?.classList.add("js-shake");
+	setTimeout(removeShake, 500);
+}
+
 function renderVictory() {
 	console.log("Victory!");
 	victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
@@ -340,13 +359,13 @@ function renderDefeat() {
 	console.log("Defeat");
 }
 
-function renderPath(gridEl: HTMLElement[][], path: Direction[][]) {
+function renderPath(gridEl: HTMLElement[][], path: Tile[][]) {
 	let [i, j] = [0, 0];
-	let curNode = path[i][j];
-	while (curNode !== "end") {
+	let curDir = path[i][j].dir;
+	while (curDir) {
 		console.log(`[${i + 1}, ${j + 1}]`);
-		[i, j] = curNode === "down" ? [i + 1, j] : [i, j + 1];
-		curNode = path[i][j];
+		[i, j] = curDir === "down" ? [i + 1, j] : [i, j + 1];
+		curDir = path[i][j].dir;
 	}
 }
 
@@ -402,7 +421,7 @@ function onTileClick(event: Event) {
 				alert("HP too low to move there!");
 			}
 		} else {
-			alert("Can't move there!");
+			renderShake(knightEl);
 		}
 	}
 }
@@ -414,7 +433,7 @@ function resetBoard() {
 
 	// Reset position and HP
 	currentPos = START;
-	[currentHP, mapPaths] = calcGrid(currentGrid);
+	[currentHP, currentGrid] = calcGrid(currentGrid);
 
 	// Deleting the existing grid on the DOM
 	while (gridEl.firstChild) {
