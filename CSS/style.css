@@ -23,49 +23,56 @@
 	--clr-bg-goal: #ffa630;
 	--clr-text-goal: white;
 
-	--clr-text-knight: green;
+	--clr-text-knight: #386641;
 
 	/* Font Family */
-	--ff-accent-1: "a Ampun Bang", sans-serif;
+	--ff-accent-1: "Ampun Bang", sans-serif;
 	--ff-accent-2: sans-serif;
 	--ff-body: "Coda", sans-serif;
 	--ff-number: "Passion One", cursive;
 	--ff-button: "Coda", sans-serif;
 
 	/* Font Size */
-	--fs-large: 2.5em;
-	--fs-grid: 1.5em;
-	--fs-text: 1.25em;
-	--fs-small: 1em;
+	--fs-large: 2.5rem;
+	--fs-grid: 1.5rem;
+	--fs-text: 1.25rem;
+	--fs-small: 1rem;
 
 	/* Font Weight */
 	--fw-number: 400;
+	--fw-800: 800;
 
 	/* Margin and Padding */
-	--flexr-gap: 1em;
-	--flexc-gap: 1em;
+	--flexr-gap: 1rem;
+	--flexc-gap: 1rem;
 
-	--margin-small: 0.75em;
-	--margin-medium: 1.5em;
+	--margin-small: 0.75rem;
+	--margin-medium: 1.5rem;
 
-	--padding-small: 1em;
-	--padding-medium: 1.5em;
-	--padding-large: 3em;
+	--padding-small: 1rem;
+	--padding-medium: 0.75rem;
+	--padding-large: 3rem;
 }
 
 /* General formatting */
+@font-face {
+	font-family: "Ampun Bang";
+	font-style: normal;
+	font-weight: 400;
+	src: url("https://fonts.cdnfonts.com/s/47799/AmpunBang-PKXL2.woff") format("woff");
+}
+
 body {
 	background-color: var(--clr-default-bg);
 	color: var(--clr-default-text);
-	max-width: 80em;
+	max-width: 55rem;
 	margin-inline: auto;
 	font-family: var(--ff-body);
-	/* border: 1px solid red; */
 }
 
 .status,
 h2,
-p:not(.text-value-knight, .text-value-start) {
+p:not(.text-value-knight, .text-value-start, .text-value-health, .text-value-enemy, .text-value-goal) {
 	font-size: var(--fs-text);
 }
 
@@ -76,7 +83,7 @@ main {
 button {
 	display: block;
 	cursor: pointer;
-	width: clamp(8em, 25vw, 10em);
+	width: clamp(8rem, 30vw, 16rem);
 	font-size: var(--fs-text);
 	background-color: var(--clr-bg-button);
 	color: var(--clr-text-button);
@@ -89,6 +96,16 @@ button:hover {
 }
 
 /* Utility classes */
+
+.flex-even-col {
+	display: flex;
+	flex-direction: row;
+	gap: var(--flexr-gap);
+}
+
+.flex-even-col > * {
+	flex: 1 1 100%;
+}
 
 .flex {
 	display: flex;
@@ -114,7 +131,11 @@ button:hover {
 }
 
 .margin-top {
-	margin-top: var(--margin-small);
+	margin-top: var(--margin-medium);
+}
+
+.margin-inline-auto {
+	margin-inline: auto;
 }
 
 .padding-inline {
@@ -132,13 +153,33 @@ button:hover {
 .font-accent-one {
 	font-family: var(--ff-accent-1);
 	color: var(--clr-text-accent);
-	font-size: 2em;
+	font-size: 2rem;
+}
+
+.js-off {
+	display: none;
+}
+
+.knight-right {
+	transform: translate(100%, 0%);
+}
+
+.knight-down {
+	transform: translate(0%, 100%);
 }
 
 /* Specific classes */
 .title {
 	font-size: var(--fs-large);
 	text-align: center;
+}
+
+.tutorial {
+	font-family: var(--ff-number);
+	font-weight: var(--fw-number);
+	font-size: var(--fs-grid);
+	line-height: 1.25;
+	color: var(--clr-text-accent);
 }
 
 .round-buttons,
@@ -151,8 +192,7 @@ button:hover {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
-	max-width: 40em;
-	margin-inline: auto;
+	max-width: 50rem;
 	/* padding: var(--margin-medium); */
 }
 
@@ -190,19 +230,21 @@ div[class^="tile"] {
 	color: var(--clr-text-selected);
 }
 
-p[class^="text-value"]:not(p.text-value-start, p.text-value-knight) {
-	/* float: right; */
+/* Enemy and Health Values Numbers */
+p:where(.text-value-enemy, .text-value-health, .text-value-goal) {
 	position: absolute;
 	top: 5%;
 	right: 7%;
 	z-index: 1;
 	background-color: transparent;
-	font-size: inherit;
 	color: inherit;
+	font-size: inherit;
+	pointer-events: none;
 }
 
 p.text-value-start {
 	position: absolute;
+	z-index: 0;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -223,12 +265,10 @@ img[class^="svg"] {
 	transform: scale(0.6, 0.6);
 	transition: transform 250ms;
 	background-color: transparent;
-	/* margin: auto auto; */
 }
 
 img[class^="svg"]:not(.svg-knight):hover {
-	transform: scale(0.8, 0.8);
-	/* margin: auto auto; */
+	transform: scale(0.9, 0.9);
 }
 
 .container-knight {
@@ -239,55 +279,67 @@ img[class^="svg"]:not(.svg-knight):hover {
 	transition: transform 500ms;
 }
 
-.knight-right {
-	transform: translate(100%, 0%);
-}
-
-.knight-down {
-	transform: translate(0%, 100%);
-}
-
 .victory-screen {
 	position: absolute;
 	z-index: 10;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	width: clamp(1.5em, 75vw, 28em);
+	width: clamp(1.5rem, 75vw, 30rem);
 	background-color: var(--clr-bg-accent);
 	border: 5px solid var(--clr-border-button);
 	text-align: center;
 }
 
 .victory-button {
-	max-width: 10em;
-	/* flex-grow: 1; */
+	max-width: 12rem;
 }
 
-.js-off {
-	display: none;
+@media (max-width: 24em) {
+	:root {
+		--fs-large: 2.25rem;
+		--fs-text: 1.25rem;
+	}
+
+	.flex-even-col {
+		flex-direction: column;
+	}
+
+	.tutorial {
+		font-size: var(--fs-text);
+	}
+
+	.victory-buttons {
+		align-items: center;
+	}
+
+	p:where(.text-value-enemy, .text-value-health, .text-value-goal, .text-value-knight, .text-value-start, .text-value-goal) {
+		top: 50%;
+		left: 47%;
+		font-size: 1.25rem;
+		transform: translate(-50%, -50%);
+		text-align: center;
+	}
+
+	.text-value-goal {
+		left: 42%;
+	}
 }
 
-@media (min-width: 500px) {
+@media (min-width: 34em) {
 	:root {
 		--fw-number: 700;
-		--fs-large: 3em;
-		--fs-grid: 2em;
-		--fs-text: 1.5em;
+		--fs-large: 3rem;
+		--fs-grid: 1.5rem;
+		--fs-text: 1.5rem;
 	}
 }
 
 @media (min-width: 700px) {
 	:root {
-		--fs-large: 4em;
-		--fs-grid: 2em;
-		--fs-text: 2em;
-		--padding-medium: 2.5em;
-	}
-}
-
-@media (min-width: 1100px) {
-	.game-grid {
-		margin-inline: 0;
+		--fs-large: 4rem;
+		--fs-grid: 2.25rem;
+		--fs-text: 2rem;
+		--padding-medium: 2.5rem;
 	}
 }

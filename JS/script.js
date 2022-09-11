@@ -1,4 +1,38 @@
 "use strict";
+class Level {
+    _index;
+    _dimGrid;
+    _randWeight;
+    _maxValueEnemy;
+    _maxValueHealth;
+    _scoreMulti;
+    constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti) {
+        this._index = _index;
+        this._dimGrid = _dimGrid;
+        this._randWeight = _randWeight;
+        this._maxValueEnemy = _maxValueEnemy;
+        this._maxValueHealth = _maxValueHealth;
+        this._scoreMulti = _scoreMulti;
+    }
+    get index() {
+        return this._index;
+    }
+    get dimGrid() {
+        return this._dimGrid;
+    }
+    get randWeight() {
+        return this._randWeight;
+    }
+    get maxValueEnemy() {
+        return this._maxValueEnemy;
+    }
+    get maxValueHealth() {
+        return this._maxValueHealth;
+    }
+    get scoreMulti() {
+        return this._scoreMulti;
+    }
+}
 class Sprite {
     _type;
     constructor(_type) {
@@ -38,9 +72,8 @@ class Tile {
 }
 const START = { y: 0, x: 0 };
 const STATUSES = {
-    TIME: 0,
-    HP: 1,
-    SCORE: 2,
+    HP: 0,
+    SCORE: 1,
 };
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
@@ -54,38 +87,30 @@ const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 const TILE_CONTENT = ["enemy", "potion"];
-const inputStartingHP = 10;
-const inputContent = [
-    ["start", "potion", "enemy", "potion"],
-    ["enemy", "enemy", "potion", "enemy"],
-    ["enemy", "enemy", "enemy", "enemy"],
-    ["potion", "enemy", "enemy", "finish"],
-];
-const inputValues = [
-    [inputStartingHP, 1, 7, 2],
-    [4, 1, 4, 10],
-    [6, 2, 9, 3],
-    [9, 3, 8, 0],
-];
+const LVL_NAMES = ["Easy", "Medium", "Hard"];
+const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
+const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
+const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
+const levels = [EASY, MEDIUM, HARD];
 // Query select DOM elements
 const statusesEl = document.querySelectorAll(".js-status");
 const gridEl = document.querySelector(".js-grid");
-const gameSectionEl = document.querySelector(".js-game-section");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
 const victoryScreenEl = document.querySelector(".js-victory");
+const victoryMessageEl = document.querySelector(".js-victory-message");
 // Initialize global variables
 let currentPos = START;
-let diffWeight = [0.75, 0.25];
-let maxValueEnemy = 16;
-let maxValueHealth = 8;
-let enemiesRank = Math.floor(maxValueEnemy / ENEMIES.length);
-let healthRank = Math.floor(maxValueHealth / HEALTH.length);
+let currentLevel = levels[0];
+let curMaxEnemy = currentLevel.maxValueEnemy;
+let curMaxHealth = currentLevel.maxValueHealth;
+let enemiesRank = Math.floor(curMaxEnemy / ENEMIES.length);
+let healthRank = Math.floor(curMaxHealth / HEALTH.length);
 // Create matrix and knight in model
-let currentGrid = createGrid(4, 4);
-let currentHP = calcStartHP(currentGrid);
+let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
+let [currentHP, mapPaths] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // currentGrid.forEach((row) => {
 // 	row.forEach((tile) => {
@@ -93,8 +118,9 @@ let knightEl = createKnight(knight);
 // 	});
 // });
 // Render grid and current HP to DOM
-renderGrid(currentGrid, gridEl);
-statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+let renderGridEl = renderGrid(currentGrid, gridEl);
+statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+renderPath(renderGridEl, mapPaths);
 // Add event listeners
 gridEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
@@ -103,6 +129,13 @@ for (const btn of btnsResetEl) {
 for (const btn of btnsNewEl) {
     btn.addEventListener("click", newBoard);
 }
+btnDiffEl.addEventListener("mouseover", () => {
+    btnDiffEl.innerText = `Try ${LVL_NAMES[currentLevel.index === 2 ? 0 : currentLevel.index + 1]}`;
+});
+btnDiffEl.addEventListener("mouseout", () => {
+    btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
+});
+btnDiffEl.addEventListener("click", changeLevel);
 function randWeight(weight) {
     let random = Math.random();
     for (let i = 0; i < weight.length; i++) {
@@ -119,6 +152,7 @@ function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 function createGrid(row, col) {
+    console.log(`Generating ${row} by ${col} grid`);
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
         const gameRow = [];
@@ -131,40 +165,53 @@ function createGrid(row, col) {
                 tile = new Tile({ y: i, x: j }, "finish", 0);
             }
             else {
-                const index = randWeight(diffWeight);
-                const maxValues = [maxValueEnemy, maxValueHealth];
+                const index = randWeight(currentLevel.randWeight);
+                const maxValues = [curMaxEnemy, curMaxHealth];
                 tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
             }
             if (tile) {
                 gameRow.push(tile);
             }
             else {
-                alert("Failed to generate tile");
+                console.log("Failed to generate tile");
             }
         }
         gameMatrix.push(gameRow);
     }
     return gameMatrix;
 }
-function calcStartHP(grid) {
+function calcGrid(grid) {
     const n = grid[0].length;
     const m = grid.length;
+    const paths = [[]];
     const row = new Array(n + 1);
     const dp = new Array(m + 1);
     dp.fill(row.fill(Infinity));
-    for (let y = m - 1; y >= 0; y--) {
-        for (let x = n - 1; x >= 0; x--) {
-            if (y === m - 1 && x === n - 1) {
-                dp[y][x] = 0;
+    for (let row = m - 1; row >= 0; row--) {
+        const pathsRow = [];
+        for (let col = n - 1; col >= 0; col--) {
+            if (row === m - 1 && col === n - 1) {
+                dp[row][col] = 0;
+                pathsRow.unshift("end");
             }
             else {
-                const value = grid[y][x].content === "enemy" ? grid[y][x].value : grid[y][x].value * -1;
-                dp[y][x] = Math.max(value, value + Math.min(dp[y + 1][x], dp[y][x + 1]));
-                console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
+                const value = grid[row][col].content === "enemy" ? grid[row][col].value : grid[row][col].value * -1;
+                const down = dp[row + 1][col];
+                const right = dp[row][col + 1];
+                if (down < right) {
+                    pathsRow.unshift("down");
+                    dp[row][col] = Math.max(value, value + down);
+                }
+                else {
+                    pathsRow.unshift("right");
+                    dp[row][col] = Math.max(value, value + right);
+                }
+                // console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
             }
         }
+        paths.unshift(pathsRow);
     }
-    return dp[0][0] + 1;
+    return [dp[0][0] + 3 - currentLevel.index, paths];
 }
 function createKnight(sprite) {
     const knightContainer = document.createElement("div");
@@ -233,24 +280,23 @@ function renderTile(tile) {
     container.appendChild(valueText);
     return container;
 }
-function renderGrid(matrix, grid_element) {
-    grid_element.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
-    grid_element.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
+function renderGrid(matrix, gridEl) {
+    const renderGridEl = [];
+    gridEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
+    gridEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
     for (let i = 0; i < matrix.length; i++) {
+        const renderRowEl = [];
         for (let j = 0; j < matrix[0].length; j++) {
             const tile = matrix[i][j];
             const displayTile = renderTile(tile);
             displayTile.style.gridColumnStart = (j + 1).toString();
             displayTile.style.gridRowStart = (i + 1).toString();
-            grid_element.appendChild(displayTile);
+            gridEl.appendChild(displayTile);
+            renderRowEl.push(displayTile);
         }
+        renderGridEl.push(renderRowEl);
     }
-}
-function renderVictory() {
-    console.log("Victory!");
-    if (victoryScreenEl.classList.contains("js-off")) {
-        victoryScreenEl.classList.remove("js-off");
-    }
+    return renderGridEl;
 }
 function renderKnight(direction, target) {
     knightEl.classList.add(`knight-${direction}`);
@@ -261,6 +307,25 @@ function renderKnight(direction, target) {
     setTimeout(updateKnight, 500);
     const knightHP = knightEl.lastElementChild;
     knightHP.innerText = currentHP.toString();
+}
+function renderVictory() {
+    console.log("Victory!");
+    victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
+    if (victoryScreenEl.classList.contains("js-off")) {
+        victoryScreenEl.classList.remove("js-off");
+    }
+}
+function renderDefeat() {
+    console.log("Defeat");
+}
+function renderPath(gridEl, path) {
+    let [i, j] = [0, 0];
+    let curNode = path[i][j];
+    while (curNode !== "end") {
+        console.log(`[${i + 1}, ${j + 1}]`);
+        [i, j] = curNode === "down" ? [i + 1, j] : [i, j + 1];
+        curNode = path[i][j];
+    }
 }
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
@@ -299,7 +364,7 @@ function onTileClick(event) {
                 currentPos = targetPos;
                 currentHP = newHP;
                 renderKnight(direction, target);
-                statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+                statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
                 target.classList.add("tile-selected");
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
@@ -320,7 +385,7 @@ function resetBoard() {
     }
     // Reset position and HP
     currentPos = START;
-    currentHP = calcStartHP(currentGrid);
+    [currentHP, mapPaths] = calcGrid(currentGrid);
     // Deleting the existing grid on the DOM
     while (gridEl.firstChild) {
         gridEl.removeChild(gridEl.firstChild);
@@ -328,11 +393,16 @@ function resetBoard() {
     // Recreate knight element, but not assigned to any children yet.
     knightEl = createKnight(knight);
     // Render new grid on DOM, with knight element
-    renderGrid(currentGrid, gridEl);
+    renderGridEl = renderGrid(currentGrid, gridEl);
     // Render HP on DOM
-    statusesEl[STATUSES.HP].innerText = `HP Remaining: ${currentHP}`;
+    statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
 }
 function newBoard() {
-    currentGrid = createGrid(4, 4);
+    currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
     resetBoard();
+}
+function showHint() { }
+function changeLevel() {
+    currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
+    newBoard();
 }

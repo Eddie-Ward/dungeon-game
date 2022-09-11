@@ -7,9 +7,8 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Passion+One:wght@400;700&family=Rubik+Mono+One&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Coda:wght@400;800&family=Passion+One:wght@400;700&display=swap"
 			rel="stylesheet" />
-		<link href="http://fonts.cdnfonts.com/css/a-ampun-bang" rel="stylesheet" />
 		<link rel="stylesheet" href="CSS/reset.css" />
 		<link rel="stylesheet" href="CSS/style.css" />
 		<script defer src="JS/script.js"></script>
@@ -17,44 +16,45 @@
 	</head>
 	<body>
 		<header>
-			<div class="title | font-accent-one margin-top">
+			<div class="title | font-accent-one padding-top padding-inline">
 				<h1>Dungeon Tiles</h1>
 			</div>
 		</header>
 		<main>
 			<section class="status-bar || padding-inline padding-top">
-				<div class="game-status container || flex">
-					<div class="round-status container || flex-col">
-						<div class="status time-left || js-status">Time Remaining:</div>
-						<div class="status hp-left || js-status">HP Remaining:</div>
+				<div class="game-status container">
+					<div class="status tutorial ||">Reach the goal without hitting 0 HP!</div>
+					<div class="status tutorial ||">You can only move down or right.</div>
+					<div class="round-status container || flex-even-col margin-top">
+						<div class="status hp-left || js-status">HP:</div>
+						<div class="status high-score || js-status">Score:</div>
 					</div>
-					<div class="status high-score || js-status">High Score:</div>
 				</div>
 			</section>
-			<section class="game-screen || margin-top | js-game-section padding-inline">
-				<div class="game-grid container || grid | js-grid"></div>
+			<section class="game-screen || padding-top padding-inline">
+				<div class="game-grid container || grid | js-grid margin-inline-auto"></div>
 			</section>
 			<section class="buttons || margin-top">
-				<div class="game-buttons container || flex | js-btns">
+				<div class="game-buttons container || flex-even-col padding-bottom | js-btns">
 					<div class="round-buttons container || flex-col | js-game-btns">
 						<button class="game-button || js-btn-reset">Reset Board</button>
 						<button class="game-button || js-btn-new">New Board</button>
 					</div>
 					<div class="mode-buttons container || flex-col | js-mode-btns">
 						<button class="mode-button || js-btn-hint">Show Hint</button>
-						<button class="mode-button || js-btn-diff">Difficulty</button>
+						<button class="mode-button || js-btn-diff">Level: Easy</button>
 					</div>
 				</div>
 			</section>
 			<section class="victory">
 				<div
 					class="victory-screen container || flex-col padding-inline padding-top padding-bottom | js-victory js-off">
-					<h2 class="victory-text || margin-top">Congratulations!</h2>
+					<h2 class="victory-text ||">Congratulations!</h2>
 					<div class="victory-status">
-						<p class="victory-message">You reached the goal with 3 HP left!</p>
+						<p class="victory-message || js-victory-message"></p>
 					</div>
 					<p class="victory-question">What would you like to do?</p>
-					<div class="victory-buttons container flex">
+					<div class="victory-buttons container || flex-even-col">
 						<button class="victory-button || js-btn-reset">Reset Board</button>
 						<button class="victory-button || js-btn-new">New Board</button>
 					</div>
