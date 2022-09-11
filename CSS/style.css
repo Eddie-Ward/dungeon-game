@@ -50,7 +50,7 @@
 	--margin-medium: 1.5rem;
 
 	--padding-small: 0.7rem;
-	--padding-medium: 0.75rem;
+	--padding-medium: 1.5rem;
 	--padding-large: 3rem;
 }
 
@@ -190,7 +190,7 @@ button:hover {
 	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
-	max-width: 50rem;
+	max-width: 52rem;
 	/* padding: var(--margin-medium); */
 }
 
@@ -296,8 +296,8 @@ img[class^="svg"]:not(.svg-knight):hover {
 	transition: transform 500ms;
 }
 
-/* Victory Screen */
-.victory-screen {
+/* End Game Screen */
+.modal-screen {
 	position: absolute;
 	z-index: 10;
 	top: 50%;
@@ -309,7 +309,7 @@ img[class^="svg"]:not(.svg-knight):hover {
 	text-align: center;
 }
 
-.victory-button {
+.modal-button {
 	max-width: 12rem;
 }
 
@@ -317,12 +317,6 @@ img[class^="svg"]:not(.svg-knight):hover {
 @media (min-width: 34em) {
 	:root {
 		--fw-number: 700;
-	}
-}
-
-@media (min-width: 700px) {
-	:root {
-		--padding-medium: 2.5rem;
 	}
 }
 

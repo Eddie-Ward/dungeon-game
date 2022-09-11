@@ -106,14 +106,15 @@ const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
 const levels = [EASY, MEDIUM, HARD];
 
 // Query select DOM elements
-const statusesEl = document.querySelectorAll(".js-status") as NodeListOf<HTMLDivElement>;
+const healthEl = document.querySelector(".js-status") as HTMLDivElement;
 const gridEl = document.querySelector(".js-grid") as HTMLDivElement;
 const btnsResetEl = document.querySelectorAll(".js-btn-reset") as NodeListOf<HTMLButtonElement>;
 const btnsNewEl = document.querySelectorAll(".js-btn-new") as NodeListOf<HTMLButtonElement>;
 const btnHintEl = document.querySelector(".js-btn-hint") as HTMLButtonElement;
 const btnDiffEl = document.querySelector(".js-btn-diff") as HTMLButtonElement;
-const victoryScreenEl = document.querySelector(".js-victory") as HTMLDivElement;
-const victoryMessageEl = document.querySelector(".js-victory-message") as HTMLParagraphElement;
+const modalScreenEl = document.querySelector(".js-modal") as HTMLDivElement;
+const modalHeaderEl = document.querySelector(".js-modal-header") as HTMLHeadingElement;
+const modalMessageEl = document.querySelector(".js-modal-message") as HTMLParagraphElement;
 
 // Initialize global variables
 let currentPos = START;
@@ -133,7 +134,7 @@ let knightEl = createKnight(knight);
 
 // Render grid and current HP to DOM
 let renderGridEl = renderGrid(currentGrid, gridEl);
-statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+healthEl.innerText = `HP: ${currentHP}`;
 
 renderPath(renderGridEl, currentGrid);
 
@@ -349,14 +350,20 @@ function renderShake(target: Element | null) {
 
 function renderVictory() {
 	console.log("Victory!");
-	victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
-	if (victoryScreenEl.classList.contains("js-off")) {
-		victoryScreenEl.classList.remove("js-off");
+	modalHeaderEl.innerText = "Congratulations!";
+	modalMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
+	if (modalScreenEl.classList.contains("js-off")) {
+		modalScreenEl.classList.remove("js-off");
 	}
 }
 
 function renderDefeat() {
 	console.log("Defeat");
+	modalHeaderEl.innerText = "Game Over!";
+	modalMessageEl.innerText = `You have 0 HP remaining!`;
+	if (modalScreenEl.classList.contains("js-off")) {
+		modalScreenEl.classList.remove("js-off");
+	}
 }
 
 function renderPath(gridEl: HTMLElement[][], path: Tile[][]) {
@@ -378,12 +385,12 @@ function moveIsValid(curPos: Coord, movePos: Coord): string | boolean {
 	return false;
 }
 
-function processHP(curHP: number, curPos: Coord, movePos: Coord, matrixGrid: Tile[][]): number | boolean {
+function processHP(curHP: number, curPos: Coord, movePos: Coord, matrixGrid: Tile[][]): number {
 	let newHP = curHP;
 	if (matrixGrid[movePos.y][movePos.x].content === "enemy") {
 		newHP -= matrixGrid[movePos.y][movePos.x].value;
 		if (newHP <= 0) {
-			return false;
+			return 0;
 		}
 	} else if (matrixGrid[movePos.y][movePos.x].content === "potion") {
 		newHP += matrixGrid[movePos.y][movePos.x].value;
@@ -404,21 +411,19 @@ function onTileClick(event: Event) {
 		const direction = moveIsValid(currentPos, targetPos);
 		if (direction) {
 			const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
-			if (newHP) {
-				currentPos = targetPos;
-				currentHP = newHP as number;
+			currentPos = targetPos;
+			currentHP = newHP;
 
-				renderKnight(direction as string, target);
+			renderKnight(direction as string, target);
+			healthEl.innerText = `HP: ${currentHP}`;
+			target.classList.add("tile-selected");
 
-				statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
-
-				target.classList.add("tile-selected");
-
+			if (currentHP > 0) {
 				if (target.classList.contains("tile-finish")) {
 					renderVictory();
 				}
 			} else {
-				alert("HP too low to move there!");
+				renderDefeat();
 			}
 		} else {
 			renderShake(knightEl);
@@ -427,8 +432,8 @@ function onTileClick(event: Event) {
 }
 
 function resetBoard() {
-	if (!victoryScreenEl.classList.contains("js-off")) {
-		victoryScreenEl.classList.add("js-off");
+	if (!modalScreenEl.classList.contains("js-off")) {
+		modalScreenEl.classList.add("js-off");
 	}
 
 	// Reset position and HP
@@ -447,7 +452,7 @@ function resetBoard() {
 	renderGridEl = renderGrid(currentGrid, gridEl);
 
 	// Render HP on DOM
-	statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+	healthEl.innerText = `HP: ${currentHP}`;
 }
 
 function newBoard() {

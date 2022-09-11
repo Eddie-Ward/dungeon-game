@@ -101,14 +101,15 @@ const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
 const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
 const levels = [EASY, MEDIUM, HARD];
 // Query select DOM elements
-const statusesEl = document.querySelectorAll(".js-status");
+const healthEl = document.querySelector(".js-status");
 const gridEl = document.querySelector(".js-grid");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
-const victoryScreenEl = document.querySelector(".js-victory");
-const victoryMessageEl = document.querySelector(".js-victory-message");
+const modalScreenEl = document.querySelector(".js-modal");
+const modalHeaderEl = document.querySelector(".js-modal-header");
+const modalMessageEl = document.querySelector(".js-modal-message");
 // Initialize global variables
 let currentPos = START;
 let currentHP = 0;
@@ -123,7 +124,7 @@ let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
 let knightEl = createKnight(knight);
 // Render grid and current HP to DOM
 let renderGridEl = renderGrid(currentGrid, gridEl);
-statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+healthEl.innerText = `HP: ${currentHP}`;
 renderPath(renderGridEl, currentGrid);
 // Add event listeners
 gridEl.addEventListener("click", onTileClick);
@@ -320,13 +321,19 @@ function renderShake(target) {
 }
 function renderVictory() {
     console.log("Victory!");
-    victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
-    if (victoryScreenEl.classList.contains("js-off")) {
-        victoryScreenEl.classList.remove("js-off");
+    modalHeaderEl.innerText = "Congratulations!";
+    modalMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
+    if (modalScreenEl.classList.contains("js-off")) {
+        modalScreenEl.classList.remove("js-off");
     }
 }
 function renderDefeat() {
     console.log("Defeat");
+    modalHeaderEl.innerText = "Game Over!";
+    modalMessageEl.innerText = `You have 0 HP remaining!`;
+    if (modalScreenEl.classList.contains("js-off")) {
+        modalScreenEl.classList.remove("js-off");
+    }
 }
 function renderPath(gridEl, path) {
     let [i, j] = [0, 0];
@@ -351,7 +358,7 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
     if (matrixGrid[movePos.y][movePos.x].content === "enemy") {
         newHP -= matrixGrid[movePos.y][movePos.x].value;
         if (newHP <= 0) {
-            return false;
+            return 0;
         }
     }
     else if (matrixGrid[movePos.y][movePos.x].content === "potion") {
@@ -370,18 +377,18 @@ function onTileClick(event) {
         const direction = moveIsValid(currentPos, targetPos);
         if (direction) {
             const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
-            if (newHP) {
-                currentPos = targetPos;
-                currentHP = newHP;
-                renderKnight(direction, target);
-                statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
-                target.classList.add("tile-selected");
+            currentPos = targetPos;
+            currentHP = newHP;
+            renderKnight(direction, target);
+            healthEl.innerText = `HP: ${currentHP}`;
+            target.classList.add("tile-selected");
+            if (currentHP > 0) {
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
                 }
             }
             else {
-                alert("HP too low to move there!");
+                renderDefeat();
             }
         }
         else {
@@ -390,8 +397,8 @@ function onTileClick(event) {
     }
 }
 function resetBoard() {
-    if (!victoryScreenEl.classList.contains("js-off")) {
-        victoryScreenEl.classList.add("js-off");
+    if (!modalScreenEl.classList.contains("js-off")) {
+        modalScreenEl.classList.add("js-off");
     }
     // Reset position and HP
     currentPos = START;
@@ -405,7 +412,7 @@ function resetBoard() {
     // Render new grid on DOM, with knight element
     renderGridEl = renderGrid(currentGrid, gridEl);
     // Render HP on DOM
-    statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+    healthEl.innerText = `HP: ${currentHP}`;
 }
 function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
