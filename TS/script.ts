@@ -3,6 +3,11 @@ interface Coord {
 	x: number;
 }
 
+interface PathTile {
+	pos: Coord;
+	tileEl: HTMLElement;
+}
+
 type Content = "potion" | "enemy" | "start" | "finish";
 type Direction = "right" | "down" | "end";
 
@@ -15,7 +20,8 @@ class Level {
 		protected _randWeight: number[],
 		protected _maxValueEnemy: number,
 		protected _maxValueHealth: number,
-		protected _scoreMulti: number
+		protected _scoreMulti: number,
+		protected _hints: number
 	) {}
 	get index() {
 		return this._index;
@@ -34,6 +40,9 @@ class Level {
 	}
 	get scoreMulti() {
 		return this._scoreMulti;
+	}
+	get hints() {
+		return this._hints;
 	}
 }
 
@@ -103,9 +112,9 @@ const GOAL = [treasure];
 const TILE_CONTENT: Content[] = ["enemy", "potion"];
 const LVL_NAMES = ["Easy", "Mid", "Hard"];
 
-const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
-const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
-const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
+const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9, 1);
+const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1, 3);
+const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2, 3);
 
 const levels = [EASY, MEDIUM, HARD];
 
@@ -145,7 +154,7 @@ let renderTilesEl = renderGrid(currentGrid, gridParentEl);
 let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
 
-renderPath(renderTilesEl, currentGrid);
+storePath(renderTilesEl, currentGrid);
 
 // Add event listeners
 
@@ -408,14 +417,16 @@ function renderDefeat() {
 	}
 }
 
-function renderPath(renderTilesEl: HTMLElement[][], path: Tile[][]) {
+function storePath(renderTilesEl: HTMLElement[][], path: Tile[][]): PathTile[] {
+	const pathTilesEl: PathTile[] = [];
 	let [i, j] = [0, 0];
 	let curDir = path[i][j].dir;
 	while (curDir) {
-		console.log(`[${i + 1}, ${j + 1}]`);
+		pathTilesEl.push({ pos: { y: i, x: j }, tileEl: renderTilesEl[i][j] });
 		[i, j] = curDir === "down" ? [i + 1, j] : [i, j + 1];
 		curDir = path[i][j].dir;
 	}
+	return pathTilesEl;
 }
 
 function moveIsValid(curPos: Coord, movePos: Coord): string | boolean {
@@ -493,7 +504,7 @@ function resetBoard() {
 	// Render new grid on DOM, with knight element
 	renderTilesEl = renderGrid(currentGrid, gridParentEl);
 	nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
-	renderPath(renderTilesEl, currentGrid);
+	storePath(renderTilesEl, currentGrid);
 
 	// Render HP on DOM
 	healthEl.innerText = `HP: ${currentHP}`;
@@ -504,7 +515,23 @@ function newBoard() {
 	resetBoard();
 }
 
-function showHint() {}
+function showHint(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]) {
+	const validTiles = pathTilesEl.filter((pathTile) => {
+		pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y;
+	});
+	const tilesShown: PathTile[] = [];
+	if (curLevel.hints >= validTiles.length) {
+		console.log(validTiles);
+		return validTiles;
+	} else {
+		while (tilesShown.length < curLevel.hints) {
+			const index = randRange(0, validTiles.length);
+			tilesShown.push(validTiles.splice(index, 1)[0]);
+		}
+	}
+	console.log(tilesShown);
+	return tilesShown;
+}
 
 function changeLevel() {
 	currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];

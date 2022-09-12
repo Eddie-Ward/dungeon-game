@@ -7,13 +7,15 @@ class Level {
     _maxValueEnemy;
     _maxValueHealth;
     _scoreMulti;
-    constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti) {
+    _hints;
+    constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti, _hints) {
         this._index = _index;
         this._dimGrid = _dimGrid;
         this._randWeight = _randWeight;
         this._maxValueEnemy = _maxValueEnemy;
         this._maxValueHealth = _maxValueHealth;
         this._scoreMulti = _scoreMulti;
+        this._hints = _hints;
     }
     get index() {
         return this._index;
@@ -32,6 +34,9 @@ class Level {
     }
     get scoreMulti() {
         return this._scoreMulti;
+    }
+    get hints() {
+        return this._hints;
     }
 }
 class Sprite {
@@ -98,9 +103,9 @@ const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 const TILE_CONTENT = ["enemy", "potion"];
 const LVL_NAMES = ["Easy", "Mid", "Hard"];
-const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
-const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
-const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
+const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9, 1);
+const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1, 3);
+const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2, 3);
 const levels = [EASY, MEDIUM, HARD];
 // Query select DOM elements
 const healthEl = document.querySelector(".js-status");
@@ -128,7 +133,7 @@ let knightEl = createKnight(knight);
 let renderTilesEl = renderGrid(currentGrid, gridParentEl);
 let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
-renderPath(renderTilesEl, currentGrid);
+storePath(renderTilesEl, currentGrid);
 // Add event listeners
 gridParentEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
@@ -368,14 +373,16 @@ function renderDefeat() {
         modalScreenEl.showModal();
     }
 }
-function renderPath(renderTilesEl, path) {
+function storePath(renderTilesEl, path) {
+    const pathTilesEl = [];
     let [i, j] = [0, 0];
     let curDir = path[i][j].dir;
     while (curDir) {
-        console.log(`[${i + 1}, ${j + 1}]`);
+        pathTilesEl.push({ pos: { y: i, x: j }, tileEl: renderTilesEl[i][j] });
         [i, j] = curDir === "down" ? [i + 1, j] : [i, j + 1];
         curDir = path[i][j].dir;
     }
+    return pathTilesEl;
 }
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
@@ -446,7 +453,7 @@ function resetBoard() {
     // Render new grid on DOM, with knight element
     renderTilesEl = renderGrid(currentGrid, gridParentEl);
     nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
-    renderPath(renderTilesEl, currentGrid);
+    storePath(renderTilesEl, currentGrid);
     // Render HP on DOM
     healthEl.innerText = `HP: ${currentHP}`;
 }
@@ -454,7 +461,24 @@ function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
     resetBoard();
 }
-function showHint() { }
+function showHint(curPos, curLevel, pathTilesEl) {
+    const validTiles = pathTilesEl.filter((pathTile) => {
+        pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y;
+    });
+    const tilesShown = [];
+    if (curLevel.hints >= validTiles.length) {
+        console.log(validTiles);
+        return validTiles;
+    }
+    else {
+        while (tilesShown.length < curLevel.hints) {
+            const index = randRange(0, validTiles.length);
+            tilesShown.push(validTiles.splice(index, 1)[0]);
+        }
+    }
+    console.log(tilesShown);
+    return tilesShown;
+}
 function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
