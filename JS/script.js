@@ -1,4 +1,5 @@
 "use strict";
+// Classes
 class Level {
     _index;
     _dimGrid;
@@ -78,6 +79,7 @@ class Tile {
         this._dir = value;
     }
 }
+// Global constants
 const START = { y: 0, x: 0 };
 const STATUSES = {
     HP: 0,
@@ -102,7 +104,7 @@ const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
 const levels = [EASY, MEDIUM, HARD];
 // Query select DOM elements
 const healthEl = document.querySelector(".js-status");
-const gridEl = document.querySelector(".js-grid");
+const gridParentEl = document.querySelector(".js-grid");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
@@ -123,11 +125,12 @@ let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
 [currentHP, currentGrid] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
 // Render grid and current HP to DOM
-let renderGridEl = renderGrid(currentGrid, gridEl);
+let renderTilesEl = renderGrid(currentGrid, gridParentEl);
+let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
-renderPath(renderGridEl, currentGrid);
+renderPath(renderTilesEl, currentGrid);
 // Add event listeners
-gridEl.addEventListener("click", onTileClick);
+gridParentEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
     btn.addEventListener("click", resetBoard);
 }
@@ -141,6 +144,7 @@ btnDiffEl.addEventListener("mouseover", () => {
 btnDiffEl.addEventListener("mouseout", () => {
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 });
+//Functions
 function randWeight(weight) {
     let random = Math.random();
     for (let i = 0; i < weight.length; i++) {
@@ -157,7 +161,7 @@ function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 function createGrid(row, col) {
-    console.log(`Generating ${row} by ${col} grid`);
+    // console.log(`Generating ${row} by ${col} grid`);
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
         const gameRow = [];
@@ -281,10 +285,10 @@ function renderTile(tile) {
     container.appendChild(valueText);
     return container;
 }
-function renderGrid(matrix, gridEl) {
-    const renderGridEl = [];
-    gridEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
-    gridEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
+function renderGrid(matrix, gridParentEl) {
+    const renderTilesEl = [];
+    gridParentEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
+    gridParentEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
     for (let i = 0; i < matrix.length; i++) {
         const renderRowEl = [];
         for (let j = 0; j < matrix[0].length; j++) {
@@ -292,12 +296,12 @@ function renderGrid(matrix, gridEl) {
             const displayTile = renderTile(tile);
             displayTile.style.gridColumnStart = (j + 1).toString();
             displayTile.style.gridRowStart = (i + 1).toString();
-            gridEl.appendChild(displayTile);
+            gridParentEl.appendChild(displayTile);
             renderRowEl.push(displayTile);
         }
-        renderGridEl.push(renderRowEl);
+        renderTilesEl.push(renderRowEl);
     }
-    return renderGridEl;
+    return renderTilesEl;
 }
 function renderKnight(direction, target) {
     knightEl.classList.add(`knight-${direction}`);
@@ -319,23 +323,52 @@ function renderShake(target) {
     target?.classList.add("js-shake");
     setTimeout(removeShake, 500);
 }
+function renderNextValid(curPos, curValid, renderTilesEl) {
+    curValid.forEach((tileEl) => {
+        tileEl.classList.remove("tile-next");
+    });
+    const [n, m] = [renderTilesEl[0].length, renderTilesEl.length];
+    if (curPos.y === m - 1) {
+        // console.log(`Currently at max ${curPos.y}`);
+        if (curPos.x === n - 1) {
+            return [];
+        }
+        curValid = [renderTilesEl[curPos.y][curPos.x + 1]];
+    }
+    else if (curPos.x === n - 1) {
+        // console.log(`Currently at max ${curPos.x}`);
+        curValid = [renderTilesEl[curPos.y + 1][curPos.x]];
+    }
+    else {
+        // console.log(`Currently at ${curPos.y}, ${curPos.x}`);
+        curValid = [renderTilesEl[curPos.y][curPos.x + 1], renderTilesEl[curPos.y + 1][curPos.x]];
+    }
+    curValid.forEach((tileEl) => {
+        tileEl.classList.add("tile-next");
+    });
+    // console.log(curValid);
+    return curValid;
+}
 function renderVictory() {
     console.log("Victory!");
     modalHeaderEl.innerText = "Congratulations!";
     modalMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
-    if (modalScreenEl.classList.contains("js-off")) {
-        modalScreenEl.classList.remove("js-off");
+    if (!modalScreenEl.open) {
+        modalScreenEl.showModal();
     }
+    // if (modalScreenEl.classList.contains("js-off")) {
+    // 	modalScreenEl.classList.remove("js-off");
+    // }
 }
 function renderDefeat() {
     console.log("Defeat");
     modalHeaderEl.innerText = "Game Over!";
     modalMessageEl.innerText = `You have 0 HP remaining!`;
-    if (modalScreenEl.classList.contains("js-off")) {
-        modalScreenEl.classList.remove("js-off");
+    if (!modalScreenEl.open) {
+        modalScreenEl.showModal();
     }
 }
-function renderPath(gridEl, path) {
+function renderPath(renderTilesEl, path) {
     let [i, j] = [0, 0];
     let curDir = path[i][j].dir;
     while (curDir) {
@@ -383,6 +416,7 @@ function onTileClick(event) {
             healthEl.innerText = `HP: ${currentHP}`;
             target.classList.add("tile-selected");
             if (currentHP > 0) {
+                nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
                 }
@@ -397,20 +431,22 @@ function onTileClick(event) {
     }
 }
 function resetBoard() {
-    if (!modalScreenEl.classList.contains("js-off")) {
-        modalScreenEl.classList.add("js-off");
+    if (modalScreenEl.open) {
+        modalScreenEl.close();
     }
     // Reset position and HP
     currentPos = START;
     [currentHP, currentGrid] = calcGrid(currentGrid);
     // Deleting the existing grid on the DOM
-    while (gridEl.firstChild) {
-        gridEl.removeChild(gridEl.firstChild);
+    while (gridParentEl.firstChild) {
+        gridParentEl.removeChild(gridParentEl.firstChild);
     }
     // Recreate knight element, but not assigned to any children yet.
     knightEl = createKnight(knight);
     // Render new grid on DOM, with knight element
-    renderGridEl = renderGrid(currentGrid, gridEl);
+    renderTilesEl = renderGrid(currentGrid, gridParentEl);
+    nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
+    renderPath(renderTilesEl, currentGrid);
     // Render HP on DOM
     healthEl.innerText = `HP: ${currentHP}`;
 }

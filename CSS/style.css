@@ -270,8 +270,13 @@ img[class^="svg"] {
 	background-color: transparent;
 }
 
-img[class^="svg"]:not(.svg-knight):hover {
-	transform: scale(0.85, 0.85);
+.tile-next img[class^="svg"]:not(.svg-knight) {
+	animation: float 3s ease-in-out infinite;
+}
+
+.tile-next img[class^="svg"]:not(.svg-knight):hover {
+	animation: none;
+	transform: scale(0.8, 0.8);
 }
 
 .container-knight.js-shake .svg-knight {
@@ -298,7 +303,7 @@ img[class^="svg"]:not(.svg-knight):hover {
 
 /* End Game Screen */
 .modal-screen {
-	position: absolute;
+	position: fixed;
 	z-index: 10;
 	top: 50%;
 	left: 50%;
@@ -337,5 +342,17 @@ img[class^="svg"]:not(.svg-knight):hover {
 	70%,
 	90% {
 		transform: translateX(4%) scale(0.8, 0.8);
+	}
+}
+
+@keyframes float {
+	0% {
+		transform: translatey(0px) scale(0.6, 0.6);
+	}
+	50% {
+		transform: translatey(-6%) scale(0.65, 0.65);
+	}
+	100% {
+		transform: translatey(0px) scale(0.6, 0.6);
 	}
 }
