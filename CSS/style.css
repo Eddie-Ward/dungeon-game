@@ -222,6 +222,14 @@ div[class^="tile"] {
 	color: var(--clr-text-goal);
 }
 
+.tile-hint {
+	/* background-color: var(--clr-bg-goal); */
+	animation-name: hint-glow;
+	animation-duration: 1s;
+	animation-iteration-count: 2;
+	animation-timing-function: ease-in-out;
+}
+
 .tile-selected img[class^="svg"]:not(.svg-knight),
 .tile-selected p[class^="text-value"]:not(.text-value-knight, .text-value-start) {
 	opacity: 20%;
@@ -345,14 +353,12 @@ img[class^="svg"] {
 	}
 }
 
-@keyframes float {
-	0% {
-		transform: translatey(0px) scale(0.6, 0.6);
+@keyframes hint-glow {
+	0%,
+	100% {
+		filter: saturate(100%);
 	}
 	50% {
-		transform: translatey(-6%) scale(0.65, 0.65);
-	}
-	100% {
-		transform: translatey(0px) scale(0.6, 0.6);
+		filter: saturate(250%);
 	}
 }

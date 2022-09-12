@@ -178,6 +178,8 @@ btnDiffEl.addEventListener("mouseout", () => {
 	btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 });
 
+btnHintEl.addEventListener("click", renderHint);
+
 //Functions
 
 function randWeight(weight: number[]): number {
@@ -515,13 +517,19 @@ function newBoard() {
 	resetBoard();
 }
 
-function showHint(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]) {
+function pickHints(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]): PathTile[] {
 	const validTiles = pathTilesEl.filter((pathTile) => {
-		pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y;
+		if (pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y) {
+			if (pathTile.pos.x === curPos.x && pathTile.pos.y === curPos.y) {
+				return false;
+			}
+			return true;
+		}
 	});
+	console.log("validTiles", validTiles);
 	const tilesShown: PathTile[] = [];
 	if (curLevel.hints >= validTiles.length) {
-		console.log(validTiles);
+		console.log("validTiles", validTiles);
 		return validTiles;
 	} else {
 		while (tilesShown.length < curLevel.hints) {
@@ -529,8 +537,21 @@ function showHint(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]) {
 			tilesShown.push(validTiles.splice(index, 1)[0]);
 		}
 	}
-	console.log(tilesShown);
+	console.log("tilesShown", tilesShown);
 	return tilesShown;
+}
+
+function renderHint() {
+	const pathTilesEl = storePath(renderTilesEl, currentGrid);
+	console.log("pathTilesEl", pathTilesEl);
+	let tilesPicked = pickHints(currentPos, currentLevel, pathTilesEl);
+	function toggleStyle() {
+		tilesPicked.forEach((tile) => {
+			tile.tileEl.classList.toggle("tile-hint");
+		});
+	}
+	toggleStyle();
+	setTimeout(toggleStyle, 2000);
 }
 
 function changeLevel() {
