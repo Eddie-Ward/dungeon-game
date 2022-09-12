@@ -151,6 +151,7 @@ btnDiffEl.addEventListener("mouseout", () => {
 });
 btnHintEl.addEventListener("click", renderHint);
 //Functions
+//Random number generators
 function randWeight(weight) {
     let random = Math.random();
     for (let i = 0; i < weight.length; i++) {
@@ -166,6 +167,7 @@ function randWeight(weight) {
 function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
+//Create objects on model
 function createGrid(row, col) {
     // console.log(`Generating ${row} by ${col} grid`);
     const gameMatrix = [];
@@ -238,6 +240,7 @@ function createKnight(sprite) {
     knightContainer.classList.add("container-knight");
     return knightContainer;
 }
+//Render objects for view
 function renderSprite(imgElement, sprites, index, value) {
     imgElement.src = sprites[index].src();
     if (value) {
@@ -407,6 +410,7 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
     }
     return newHP;
 }
+// Callback functions for listeners
 function onTileClick(event) {
     let target = event.target;
     if ((target.tagName === "IMG" || target.tagName === "P") &&

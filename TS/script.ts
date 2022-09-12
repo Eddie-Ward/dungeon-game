@@ -182,6 +182,8 @@ btnHintEl.addEventListener("click", renderHint);
 
 //Functions
 
+//Random number generators
+
 function randWeight(weight: number[]): number {
 	let random = Math.random();
 	for (let i = 0; i < weight.length; i++) {
@@ -197,6 +199,8 @@ function randWeight(weight: number[]): number {
 function randRange(min: number, max: number): number {
 	return Math.floor(Math.random() * (max - min) + min);
 }
+
+//Create objects on model
 
 function createGrid(row: number, col: number): Tile[][] {
 	// console.log(`Generating ${row} by ${col} grid`);
@@ -272,6 +276,8 @@ function createKnight(sprite: Sprite): HTMLDivElement {
 	knightContainer.classList.add("container-knight");
 	return knightContainer;
 }
+
+//Render objects for view
 
 function renderSprite(
 	imgElement: HTMLImageElement,
@@ -452,6 +458,8 @@ function processHP(curHP: number, curPos: Coord, movePos: Coord, matrixGrid: Til
 	}
 	return newHP;
 }
+
+// Callback functions for listeners
 
 function onTileClick(event: Event) {
 	let target = event.target as HTMLElement;
