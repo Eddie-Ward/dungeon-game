@@ -353,6 +353,18 @@ img[class^="svg"] {
 	}
 }
 
+@keyframes float {
+	0% {
+		transform: translatey(0px) scale(0.6, 0.6);
+	}
+	50% {
+		transform: translatey(-6%) scale(0.65, 0.65);
+	}
+	100% {
+		transform: translatey(0px) scale(0.6, 0.6);
+	}
+}
+
 @keyframes hint-glow {
 	0%,
 	100% {
