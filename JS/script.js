@@ -1,4 +1,5 @@
 "use strict";
+// Classes
 class Level {
     _index;
     _dimGrid;
@@ -6,13 +7,15 @@ class Level {
     _maxValueEnemy;
     _maxValueHealth;
     _scoreMulti;
-    constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti) {
+    _hints;
+    constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti, _hints) {
         this._index = _index;
         this._dimGrid = _dimGrid;
         this._randWeight = _randWeight;
         this._maxValueEnemy = _maxValueEnemy;
         this._maxValueHealth = _maxValueHealth;
         this._scoreMulti = _scoreMulti;
+        this._hints = _hints;
     }
     get index() {
         return this._index;
@@ -31,6 +34,9 @@ class Level {
     }
     get scoreMulti() {
         return this._scoreMulti;
+    }
+    get hints() {
+        return this._hints;
     }
 }
 class Sprite {
@@ -55,10 +61,12 @@ class Tile {
     _pos;
     _content;
     _value;
-    constructor(_pos, _content, _value) {
+    _dir;
+    constructor(_pos, _content, _value, _dir) {
         this._pos = _pos;
         this._content = _content;
         this._value = _value;
+        this._dir = _dir;
     }
     get pos() {
         return this._pos;
@@ -69,7 +77,14 @@ class Tile {
     get value() {
         return this._value;
     }
+    get dir() {
+        return this._dir;
+    }
+    set dir(value) {
+        this._dir = value;
+    }
 }
+// Global constants
 const START = { y: 0, x: 0 };
 const STATUSES = {
     HP: 0,
@@ -87,22 +102,24 @@ const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
 const TILE_CONTENT = ["enemy", "potion"];
-const LVL_NAMES = ["Easy", "Medium", "Hard"];
-const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9);
-const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1);
-const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2);
+const LVL_NAMES = ["Easy", "Mid", "Hard"];
+const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9, 1);
+const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1, 3);
+const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2, 3);
 const levels = [EASY, MEDIUM, HARD];
 // Query select DOM elements
-const statusesEl = document.querySelectorAll(".js-status");
-const gridEl = document.querySelector(".js-grid");
+const healthEl = document.querySelector(".js-status");
+const gridParentEl = document.querySelector(".js-grid");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
-const victoryScreenEl = document.querySelector(".js-victory");
-const victoryMessageEl = document.querySelector(".js-victory-message");
+const modalScreenEl = document.querySelector(".js-modal");
+const modalHeaderEl = document.querySelector(".js-modal-header");
+const modalMessageEl = document.querySelector(".js-modal-message");
 // Initialize global variables
 let currentPos = START;
+let currentHP = 0;
 let currentLevel = levels[0];
 let curMaxEnemy = currentLevel.maxValueEnemy;
 let curMaxHealth = currentLevel.maxValueHealth;
@@ -110,32 +127,31 @@ let enemiesRank = Math.floor(curMaxEnemy / ENEMIES.length);
 let healthRank = Math.floor(curMaxHealth / HEALTH.length);
 // Create matrix and knight in model
 let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
-let [currentHP, mapPaths] = calcGrid(currentGrid);
+[currentHP, currentGrid] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
-// currentGrid.forEach((row) => {
-// 	row.forEach((tile) => {
-// 		console.log(`${tile.content} at [${tile.pos.x}, ${tile.pos.y}] with ${tile.value}`);
-// 	});
-// });
 // Render grid and current HP to DOM
-let renderGridEl = renderGrid(currentGrid, gridEl);
-statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
-renderPath(renderGridEl, mapPaths);
+let renderTilesEl = renderGrid(currentGrid, gridParentEl);
+let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
+healthEl.innerText = `HP: ${currentHP}`;
+storePath(renderTilesEl, currentGrid);
 // Add event listeners
-gridEl.addEventListener("click", onTileClick);
+gridParentEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
     btn.addEventListener("click", resetBoard);
 }
 for (const btn of btnsNewEl) {
     btn.addEventListener("click", newBoard);
 }
+btnDiffEl.addEventListener("click", changeLevel);
 btnDiffEl.addEventListener("mouseover", () => {
     btnDiffEl.innerText = `Try ${LVL_NAMES[currentLevel.index === 2 ? 0 : currentLevel.index + 1]}`;
 });
 btnDiffEl.addEventListener("mouseout", () => {
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 });
-btnDiffEl.addEventListener("click", changeLevel);
+btnHintEl.addEventListener("click", renderHint);
+//Functions
+//Random number generators
 function randWeight(weight) {
     let random = Math.random();
     for (let i = 0; i < weight.length; i++) {
@@ -151,23 +167,24 @@ function randWeight(weight) {
 function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
+//Create objects on model
 function createGrid(row, col) {
-    console.log(`Generating ${row} by ${col} grid`);
+    // console.log(`Generating ${row} by ${col} grid`);
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
         const gameRow = [];
         for (let j = 0; j < col; j++) {
             let tile;
             if (i === START.y && j === START.x) {
-                tile = new Tile(START, "start", 0);
+                tile = new Tile(START, "start", 0, null);
             }
             else if (i === row - 1 && j === col - 1) {
-                tile = new Tile({ y: i, x: j }, "finish", 0);
+                tile = new Tile({ y: i, x: j }, "finish", 0, null);
             }
             else {
                 const index = randWeight(currentLevel.randWeight);
                 const maxValues = [curMaxEnemy, curMaxHealth];
-                tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]));
+                tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]), null);
             }
             if (tile) {
                 gameRow.push(tile);
@@ -183,7 +200,6 @@ function createGrid(row, col) {
 function calcGrid(grid) {
     const n = grid[0].length;
     const m = grid.length;
-    const paths = [[]];
     const row = new Array(n + 1);
     const dp = new Array(m + 1);
     dp.fill(row.fill(Infinity));
@@ -192,26 +208,23 @@ function calcGrid(grid) {
         for (let col = n - 1; col >= 0; col--) {
             if (row === m - 1 && col === n - 1) {
                 dp[row][col] = 0;
-                pathsRow.unshift("end");
             }
             else {
                 const value = grid[row][col].content === "enemy" ? grid[row][col].value : grid[row][col].value * -1;
                 const down = dp[row + 1][col];
                 const right = dp[row][col + 1];
                 if (down < right) {
-                    pathsRow.unshift("down");
+                    grid[row][col].dir = "down";
                     dp[row][col] = Math.max(value, value + down);
                 }
                 else {
-                    pathsRow.unshift("right");
+                    grid[row][col].dir = "right";
                     dp[row][col] = Math.max(value, value + right);
                 }
-                // console.log(`[${x + 1}][${y + 1}] is ${dp[y][x]}`);
             }
         }
-        paths.unshift(pathsRow);
     }
-    return [dp[0][0] + 3 - currentLevel.index, paths];
+    return [dp[0][0] + 3 - currentLevel.index, grid];
 }
 function createKnight(sprite) {
     const knightContainer = document.createElement("div");
@@ -227,6 +240,7 @@ function createKnight(sprite) {
     knightContainer.classList.add("container-knight");
     return knightContainer;
 }
+//Render objects for view
 function renderSprite(imgElement, sprites, index, value) {
     imgElement.src = sprites[index].src();
     if (value) {
@@ -280,10 +294,10 @@ function renderTile(tile) {
     container.appendChild(valueText);
     return container;
 }
-function renderGrid(matrix, gridEl) {
-    const renderGridEl = [];
-    gridEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
-    gridEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
+function renderGrid(matrix, gridParentEl) {
+    const renderTilesEl = [];
+    gridParentEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
+    gridParentEl.style.gridTemplateRows = `repeat(${matrix.length}, 1fr)`;
     for (let i = 0; i < matrix.length; i++) {
         const renderRowEl = [];
         for (let j = 0; j < matrix[0].length; j++) {
@@ -291,12 +305,12 @@ function renderGrid(matrix, gridEl) {
             const displayTile = renderTile(tile);
             displayTile.style.gridColumnStart = (j + 1).toString();
             displayTile.style.gridRowStart = (i + 1).toString();
-            gridEl.appendChild(displayTile);
+            gridParentEl.appendChild(displayTile);
             renderRowEl.push(displayTile);
         }
-        renderGridEl.push(renderRowEl);
+        renderTilesEl.push(renderRowEl);
     }
-    return renderGridEl;
+    return renderTilesEl;
 }
 function renderKnight(direction, target) {
     knightEl.classList.add(`knight-${direction}`);
@@ -308,24 +322,71 @@ function renderKnight(direction, target) {
     const knightHP = knightEl.lastElementChild;
     knightHP.innerText = currentHP.toString();
 }
+function renderShake(target) {
+    function removeShake() {
+        if (target?.classList.contains("js-shake")) {
+            target.classList.remove("js-shake");
+        }
+    }
+    removeShake();
+    target?.classList.add("js-shake");
+    setTimeout(removeShake, 500);
+}
+function renderNextValid(curPos, curValid, renderTilesEl) {
+    curValid.forEach((tileEl) => {
+        tileEl.classList.remove("tile-next");
+    });
+    const [n, m] = [renderTilesEl[0].length, renderTilesEl.length];
+    if (curPos.y === m - 1) {
+        // console.log(`Currently at max ${curPos.y}`);
+        if (curPos.x === n - 1) {
+            return [];
+        }
+        curValid = [renderTilesEl[curPos.y][curPos.x + 1]];
+    }
+    else if (curPos.x === n - 1) {
+        // console.log(`Currently at max ${curPos.x}`);
+        curValid = [renderTilesEl[curPos.y + 1][curPos.x]];
+    }
+    else {
+        // console.log(`Currently at ${curPos.y}, ${curPos.x}`);
+        curValid = [renderTilesEl[curPos.y][curPos.x + 1], renderTilesEl[curPos.y + 1][curPos.x]];
+    }
+    curValid.forEach((tileEl) => {
+        tileEl.classList.add("tile-next");
+    });
+    // console.log(curValid);
+    return curValid;
+}
 function renderVictory() {
     console.log("Victory!");
-    victoryMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
-    if (victoryScreenEl.classList.contains("js-off")) {
-        victoryScreenEl.classList.remove("js-off");
+    modalHeaderEl.innerText = "Congratulations!";
+    modalMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
+    if (!modalScreenEl.open) {
+        modalScreenEl.showModal();
     }
+    // if (modalScreenEl.classList.contains("js-off")) {
+    // 	modalScreenEl.classList.remove("js-off");
+    // }
 }
 function renderDefeat() {
     console.log("Defeat");
-}
-function renderPath(gridEl, path) {
-    let [i, j] = [0, 0];
-    let curNode = path[i][j];
-    while (curNode !== "end") {
-        console.log(`[${i + 1}, ${j + 1}]`);
-        [i, j] = curNode === "down" ? [i + 1, j] : [i, j + 1];
-        curNode = path[i][j];
+    modalHeaderEl.innerText = "Game Over!";
+    modalMessageEl.innerText = `You have 0 HP remaining!`;
+    if (!modalScreenEl.open) {
+        modalScreenEl.showModal();
     }
+}
+function storePath(renderTilesEl, path) {
+    const pathTilesEl = [];
+    let [i, j] = [0, 0];
+    let curDir = path[i][j].dir;
+    while (curDir) {
+        pathTilesEl.push({ pos: { y: i, x: j }, tileEl: renderTilesEl[i][j] });
+        [i, j] = curDir === "down" ? [i + 1, j] : [i, j + 1];
+        curDir = path[i][j].dir;
+    }
+    return pathTilesEl;
 }
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
@@ -341,7 +402,7 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
     if (matrixGrid[movePos.y][movePos.x].content === "enemy") {
         newHP -= matrixGrid[movePos.y][movePos.x].value;
         if (newHP <= 0) {
-            return false;
+            return 0;
         }
     }
     else if (matrixGrid[movePos.y][movePos.x].content === "potion") {
@@ -349,6 +410,7 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
     }
     return newHP;
 }
+// Callback functions for listeners
 function onTileClick(event) {
     let target = event.target;
     if ((target.tagName === "IMG" || target.tagName === "P") &&
@@ -360,49 +422,88 @@ function onTileClick(event) {
         const direction = moveIsValid(currentPos, targetPos);
         if (direction) {
             const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
-            if (newHP) {
-                currentPos = targetPos;
-                currentHP = newHP;
-                renderKnight(direction, target);
-                statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
-                target.classList.add("tile-selected");
+            currentPos = targetPos;
+            currentHP = newHP;
+            renderKnight(direction, target);
+            healthEl.innerText = `HP: ${currentHP}`;
+            target.classList.add("tile-selected");
+            if (currentHP > 0) {
+                nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
                 if (target.classList.contains("tile-finish")) {
                     renderVictory();
                 }
             }
             else {
-                alert("HP too low to move there!");
+                renderDefeat();
             }
         }
         else {
-            alert("Can't move there!");
+            renderShake(knightEl);
         }
     }
 }
 function resetBoard() {
-    if (!victoryScreenEl.classList.contains("js-off")) {
-        victoryScreenEl.classList.add("js-off");
+    if (modalScreenEl.open) {
+        modalScreenEl.close();
     }
     // Reset position and HP
     currentPos = START;
-    [currentHP, mapPaths] = calcGrid(currentGrid);
+    [currentHP, currentGrid] = calcGrid(currentGrid);
     // Deleting the existing grid on the DOM
-    while (gridEl.firstChild) {
-        gridEl.removeChild(gridEl.firstChild);
+    while (gridParentEl.firstChild) {
+        gridParentEl.removeChild(gridParentEl.firstChild);
     }
     // Recreate knight element, but not assigned to any children yet.
     knightEl = createKnight(knight);
     // Render new grid on DOM, with knight element
-    renderGridEl = renderGrid(currentGrid, gridEl);
+    renderTilesEl = renderGrid(currentGrid, gridParentEl);
+    nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
+    storePath(renderTilesEl, currentGrid);
     // Render HP on DOM
-    statusesEl[STATUSES.HP].innerText = `HP: ${currentHP}`;
+    healthEl.innerText = `HP: ${currentHP}`;
 }
 function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
     resetBoard();
 }
-function showHint() { }
+function pickHints(curPos, curLevel, pathTilesEl) {
+    const validTiles = pathTilesEl.filter((pathTile) => {
+        if (pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y) {
+            if (pathTile.pos.x === curPos.x && pathTile.pos.y === curPos.y) {
+                return false;
+            }
+            return true;
+        }
+    });
+    console.log("validTiles", validTiles);
+    const tilesShown = [];
+    if (curLevel.hints >= validTiles.length) {
+        console.log("validTiles", validTiles);
+        return validTiles;
+    }
+    else {
+        while (tilesShown.length < curLevel.hints) {
+            const index = randRange(0, validTiles.length);
+            tilesShown.push(validTiles.splice(index, 1)[0]);
+        }
+    }
+    console.log("tilesShown", tilesShown);
+    return tilesShown;
+}
+function renderHint() {
+    const pathTilesEl = storePath(renderTilesEl, currentGrid);
+    console.log("pathTilesEl", pathTilesEl);
+    let tilesPicked = pickHints(currentPos, currentLevel, pathTilesEl);
+    function toggleStyle() {
+        tilesPicked.forEach((tile) => {
+            tile.tileEl.classList.toggle("tile-hint");
+        });
+    }
+    toggleStyle();
+    setTimeout(toggleStyle, 2000);
+}
 function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
+    btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
     newBoard();
 }
