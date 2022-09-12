@@ -1,13 +1,15 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 // Classes
 class Level {
-    _index;
-    _dimGrid;
-    _randWeight;
-    _maxValueEnemy;
-    _maxValueHealth;
-    _scoreMulti;
-    _hints;
     constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti, _hints) {
         this._index = _index;
         this._dimGrid = _dimGrid;
@@ -40,7 +42,6 @@ class Level {
     }
 }
 class Sprite {
-    _type;
     constructor(_type) {
         this._type = _type;
     }
@@ -58,7 +59,6 @@ class Sprite {
     }
 }
 class Arrow extends Sprite {
-    _type;
     constructor(_type) {
         super(_type);
         this._type = _type;
@@ -68,10 +68,6 @@ class Arrow extends Sprite {
     }
 }
 class Tile {
-    _pos;
-    _content;
-    _value;
-    _dir;
     constructor(_pos, _content, _value, _dir) {
         this._pos = _pos;
         this._content = _content;
@@ -127,6 +123,7 @@ const btnsResetEl = document.querySelectorAll(".js-btn-reset");
 const btnsNewEl = document.querySelectorAll(".js-btn-new");
 const btnHintEl = document.querySelector(".js-btn-hint");
 const btnDiffEl = document.querySelector(".js-btn-diff");
+const btnVisualizeEl = document.querySelector(".js-btn-visualize");
 const modalScreenEl = document.querySelector(".js-modal");
 const modalHeaderEl = document.querySelector(".js-modal-header");
 const modalMessageEl = document.querySelector(".js-modal-message");
@@ -134,6 +131,8 @@ const modalMessageEl = document.querySelector(".js-modal-message");
 let currentPos = START;
 let currentHP = 0;
 let currentLevel = levels[0];
+let visualizeState = false;
+let resetBoardCall = false;
 let curMaxEnemy = currentLevel.maxValueEnemy;
 let curMaxHealth = currentLevel.maxValueHealth;
 let enemiesRank = Math.floor(curMaxEnemy / ENEMIES.length);
@@ -146,7 +145,7 @@ let knightEl = createKnight(knight);
 let renderTilesEl = renderGrid(currentGrid, gridParentEl);
 let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
-storePath(renderTilesEl, currentGrid);
+let pathTilesEl = storePath(renderTilesEl, currentGrid);
 // Add event listeners
 gridParentEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
@@ -163,6 +162,7 @@ btnDiffEl.addEventListener("mouseout", () => {
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 });
 btnHintEl.addEventListener("click", renderHint);
+btnVisualizeEl.addEventListener("click", visualizerToggle);
 //Functions
 //Random number generators
 function randWeight(weight) {
@@ -317,6 +317,7 @@ function renderTile(tile) {
         container.appendChild(svgSprite);
     }
     container.appendChild(valueText);
+    container.classList.add("js-visualize-off");
     return container;
 }
 function renderGrid(matrix, gridParentEl) {
@@ -349,12 +350,12 @@ function renderKnight(direction, target) {
 }
 function renderShake(target) {
     function removeShake() {
-        if (target?.classList.contains("js-shake")) {
+        if (target === null || target === void 0 ? void 0 : target.classList.contains("js-shake")) {
             target.classList.remove("js-shake");
         }
     }
     removeShake();
-    target?.classList.add("js-shake");
+    target === null || target === void 0 ? void 0 : target.classList.add("js-shake");
     setTimeout(removeShake, 500);
 }
 function renderNextValid(curPos, curValid, renderTilesEl) {
@@ -413,6 +414,40 @@ function storePath(renderTilesEl, path) {
     }
     return pathTilesEl;
 }
+function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let row = renderTilesEl.length - 1; row >= 0; row--) {
+            for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
+                if (!visualizeState || resetBoardCall) {
+                    return Promise.resolve();
+                }
+                renderTilesEl[row][col].classList.remove("js-visualize-off");
+                yield wait(100);
+            }
+            if (!visualizeState || resetBoardCall) {
+                return Promise.resolve();
+            }
+        }
+        for (let i = 0; i < pathTilesEl.length; i++) {
+            if (!visualizeState || resetBoardCall) {
+                return Promise.resolve();
+            }
+            pathTilesEl[i].tileEl.classList.add("js-show-path");
+            console.log(`Showing path tile ${i}`);
+            yield wait(100);
+        }
+    });
+}
+function hideTileArrowsEl(renderTilesEl, pathTilesEl) {
+    for (let row = renderTilesEl.length - 1; row >= 0; row--) {
+        for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
+            renderTilesEl[row][col].classList.add("js-visualize-off");
+        }
+    }
+    for (let i = 0; i < pathTilesEl.length; i++) {
+        pathTilesEl[i].tileEl.classList.remove("js-show-path");
+    }
+}
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
         return "right";
@@ -437,9 +472,10 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
 }
 // Callback functions for listeners
 function onTileClick(event) {
+    var _a;
     let target = event.target;
     if ((target.tagName === "IMG" || target.tagName === "P") &&
-        !target.parentElement?.classList.contains("container-knight")) {
+        !((_a = target.parentElement) === null || _a === void 0 ? void 0 : _a.classList.contains("container-knight"))) {
         target = target.parentElement;
     }
     if (target && target.dataset.X) {
@@ -468,24 +504,32 @@ function onTileClick(event) {
     }
 }
 function resetBoard() {
-    if (modalScreenEl.open) {
-        modalScreenEl.close();
-    }
-    // Reset position and HP
-    currentPos = START;
-    [currentHP, currentGrid] = calcGrid(currentGrid);
-    // Deleting the existing grid on the DOM
-    while (gridParentEl.firstChild) {
-        gridParentEl.removeChild(gridParentEl.firstChild);
-    }
-    // Recreate knight element, but not assigned to any children yet.
-    knightEl = createKnight(knight);
-    // Render new grid on DOM, with knight element
-    renderTilesEl = renderGrid(currentGrid, gridParentEl);
-    nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
-    storePath(renderTilesEl, currentGrid);
-    // Render HP on DOM
-    healthEl.innerText = `HP: ${currentHP}`;
+    return __awaiter(this, void 0, void 0, function* () {
+        resetBoardCall = true;
+        if (modalScreenEl.open) {
+            modalScreenEl.close();
+        }
+        // Reset position and HP
+        currentPos = START;
+        [currentHP, currentGrid] = calcGrid(currentGrid);
+        // Deleting the existing grid on the DOM
+        while (gridParentEl.firstChild) {
+            gridParentEl.removeChild(gridParentEl.firstChild);
+        }
+        // Recreate knight element, but not assigned to any children yet.
+        knightEl = createKnight(knight);
+        // Render new grid on DOM, with knight element
+        renderTilesEl = renderGrid(currentGrid, gridParentEl);
+        nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
+        pathTilesEl = storePath(renderTilesEl, currentGrid);
+        // Render HP on DOM
+        healthEl.innerText = `HP: ${currentHP}`;
+        yield wait(250);
+        resetBoardCall = false;
+        if (visualizeState && !resetBoardCall) {
+            renderTileArrowsEl(renderTilesEl, pathTilesEl);
+        }
+    });
 }
 function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
@@ -500,10 +544,8 @@ function pickHints(curPos, curLevel, pathTilesEl) {
             return true;
         }
     });
-    console.log("validTiles", validTiles);
     const tilesShown = [];
     if (curLevel.hints >= validTiles.length) {
-        console.log("validTiles", validTiles);
         return validTiles;
     }
     else {
@@ -512,11 +554,10 @@ function pickHints(curPos, curLevel, pathTilesEl) {
             tilesShown.push(validTiles.splice(index, 1)[0]);
         }
     }
-    console.log("tilesShown", tilesShown);
     return tilesShown;
 }
 function renderHint() {
-    const pathTilesEl = storePath(renderTilesEl, currentGrid);
+    pathTilesEl = storePath(renderTilesEl, currentGrid);
     console.log("pathTilesEl", pathTilesEl);
     let tilesPicked = pickHints(currentPos, currentLevel, pathTilesEl);
     function toggleStyle() {
@@ -531,4 +572,18 @@ function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
     newBoard();
+}
+function visualizerToggle() {
+    visualizeState = !visualizeState;
+    btnVisualizeEl.classList.toggle("js-button-on");
+    btnVisualizeEl.innerText = visualizeState ? "Visualizer: On" : "Visualizer: Off";
+    if (visualizeState && !resetBoardCall) {
+        renderTileArrowsEl(renderTilesEl, pathTilesEl);
+    }
+    else {
+        hideTileArrowsEl(renderTilesEl, pathTilesEl);
+    }
+}
+function wait(ms) {
+    return new Promise((res) => setTimeout(res, ms));
 }

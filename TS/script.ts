@@ -139,6 +139,7 @@ const btnsResetEl = document.querySelectorAll(".js-btn-reset") as NodeListOf<HTM
 const btnsNewEl = document.querySelectorAll(".js-btn-new") as NodeListOf<HTMLButtonElement>;
 const btnHintEl = document.querySelector(".js-btn-hint") as HTMLButtonElement;
 const btnDiffEl = document.querySelector(".js-btn-diff") as HTMLButtonElement;
+const btnVisualizeEl = document.querySelector(".js-btn-visualize") as HTMLButtonElement;
 const modalScreenEl = document.querySelector(".js-modal") as HTMLDialogElement;
 const modalHeaderEl = document.querySelector(".js-modal-header") as HTMLHeadingElement;
 const modalMessageEl = document.querySelector(".js-modal-message") as HTMLParagraphElement;
@@ -148,6 +149,8 @@ const modalMessageEl = document.querySelector(".js-modal-message") as HTMLParagr
 let currentPos = START;
 let currentHP = 0;
 let currentLevel = levels[0];
+let visualizeState = false;
+let resetBoardCall = false;
 
 let curMaxEnemy = currentLevel.maxValueEnemy;
 let curMaxHealth = currentLevel.maxValueHealth;
@@ -167,7 +170,7 @@ let renderTilesEl = renderGrid(currentGrid, gridParentEl);
 let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
 
-storePath(renderTilesEl, currentGrid);
+let pathTilesEl = storePath(renderTilesEl, currentGrid);
 
 // Add event listeners
 
@@ -192,6 +195,8 @@ btnDiffEl.addEventListener("mouseout", () => {
 });
 
 btnHintEl.addEventListener("click", renderHint);
+
+btnVisualizeEl.addEventListener("click", visualizerToggle);
 
 //Functions
 
@@ -360,6 +365,7 @@ function renderTile(tile: Tile): HTMLElement {
 		container.appendChild(svgSprite);
 	}
 	container.appendChild(valueText);
+	container.classList.add("js-visualize-off");
 	return container;
 }
 
@@ -462,6 +468,40 @@ function storePath(renderTilesEl: HTMLElement[][], path: Tile[][]): PathTile[] {
 	return pathTilesEl;
 }
 
+async function renderTileArrowsEl(renderTilesEl: HTMLElement[][], pathTilesEl: PathTile[]) {
+	for (let row = renderTilesEl.length - 1; row >= 0; row--) {
+		for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
+			if (!visualizeState || resetBoardCall) {
+				return Promise.resolve();
+			}
+			renderTilesEl[row][col].classList.remove("js-visualize-off");
+			await wait(100);
+		}
+		if (!visualizeState || resetBoardCall) {
+			return Promise.resolve();
+		}
+	}
+	for (let i = 0; i < pathTilesEl.length; i++) {
+		if (!visualizeState || resetBoardCall) {
+			return Promise.resolve();
+		}
+		pathTilesEl[i].tileEl.classList.add("js-show-path");
+		console.log(`Showing path tile ${i}`);
+		await wait(100);
+	}
+}
+
+function hideTileArrowsEl(renderTilesEl: HTMLElement[][], pathTilesEl: PathTile[]) {
+	for (let row = renderTilesEl.length - 1; row >= 0; row--) {
+		for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
+			renderTilesEl[row][col].classList.add("js-visualize-off");
+		}
+	}
+	for (let i = 0; i < pathTilesEl.length; i++) {
+		pathTilesEl[i].tileEl.classList.remove("js-show-path");
+	}
+}
+
 function moveIsValid(curPos: Coord, movePos: Coord): string | boolean {
 	if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
 		return "right";
@@ -520,7 +560,8 @@ function onTileClick(event: Event) {
 	}
 }
 
-function resetBoard() {
+async function resetBoard() {
+	resetBoardCall = true;
 	if (modalScreenEl.open) {
 		modalScreenEl.close();
 	}
@@ -539,10 +580,16 @@ function resetBoard() {
 	// Render new grid on DOM, with knight element
 	renderTilesEl = renderGrid(currentGrid, gridParentEl);
 	nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
-	storePath(renderTilesEl, currentGrid);
+	pathTilesEl = storePath(renderTilesEl, currentGrid);
 
 	// Render HP on DOM
 	healthEl.innerText = `HP: ${currentHP}`;
+	await wait(250);
+	resetBoardCall = false;
+
+	if (visualizeState && !resetBoardCall) {
+		renderTileArrowsEl(renderTilesEl, pathTilesEl);
+	}
 }
 
 function newBoard() {
@@ -559,10 +606,8 @@ function pickHints(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]): Pat
 			return true;
 		}
 	});
-	console.log("validTiles", validTiles);
 	const tilesShown: PathTile[] = [];
 	if (curLevel.hints >= validTiles.length) {
-		console.log("validTiles", validTiles);
 		return validTiles;
 	} else {
 		while (tilesShown.length < curLevel.hints) {
@@ -570,12 +615,11 @@ function pickHints(curPos: Coord, curLevel: Level, pathTilesEl: PathTile[]): Pat
 			tilesShown.push(validTiles.splice(index, 1)[0]);
 		}
 	}
-	console.log("tilesShown", tilesShown);
 	return tilesShown;
 }
 
 function renderHint() {
-	const pathTilesEl = storePath(renderTilesEl, currentGrid);
+	pathTilesEl = storePath(renderTilesEl, currentGrid);
 	console.log("pathTilesEl", pathTilesEl);
 	let tilesPicked = pickHints(currentPos, currentLevel, pathTilesEl);
 	function toggleStyle() {
@@ -591,4 +635,20 @@ function changeLevel() {
 	currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
 	btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
 	newBoard();
+}
+
+function visualizerToggle() {
+	visualizeState = !visualizeState;
+	btnVisualizeEl.classList.toggle("js-button-on");
+	btnVisualizeEl.innerText = visualizeState ? "Visualizer: On" : "Visualizer: Off";
+
+	if (visualizeState && !resetBoardCall) {
+		renderTileArrowsEl(renderTilesEl, pathTilesEl);
+	} else {
+		hideTileArrowsEl(renderTilesEl, pathTilesEl);
+	}
+}
+
+function wait(ms: number) {
+	return new Promise((res) => setTimeout(res, ms));
 }
