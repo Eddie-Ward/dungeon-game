@@ -14,6 +14,17 @@ type Direction = "right" | "down" | "end";
 // Classes
 
 class Level {
+	/**
+	 * Creates an instance of Level.
+	 * @param {number} _index Index of level in array, also used for determining starting HP
+	 * @param {number} _dimGrid Dimensions of grid to generate based on level
+	 * @param {number[]} _randWeight Weight that determines ratio of enemy to health tiles for randomizer
+	 * @param {number} _maxValueEnemy Max value for enemy tile
+	 * @param {number} _maxValueHealth Max value for health tile
+	 * @param {number} _scoreMulti Score multiplier (unimplemented)
+	 * @param {number} _hints Number of hints to show
+	 * @memberof Level Difficulty of the current round
+	 */
 	constructor(
 		protected _index: number,
 		protected _dimGrid: number,
@@ -47,6 +58,13 @@ class Level {
 }
 
 class Sprite {
+	/**
+	 * Creates an instance of a sprite for adding to tile.
+	 * SVG Vectors obtained from https://www.svgrepo.com/collection/role-playing-game/
+	 *
+	 * @param {string} _type Name of vector, relates to src file and file location
+	 * @memberof Sprite SVG of sprite to add to board
+	 */
 	constructor(protected _type: string) {}
 
 	get type() {
@@ -64,15 +82,37 @@ class Sprite {
 }
 
 class Arrow extends Sprite {
+	/**
+	 * Creates an instance of arrow SVG for adding to tile for visualizer mode.
+	 * SVG Vector obtained from https://www.svgrepo.com/vectors/arrow/
+	 *
+	 * @param {string} _type
+	 * @memberof Arrow SVG arrow to add to board
+	 */
 	constructor(protected _type: string) {
 		super(_type);
 	}
+	/**
+	 * Generates alternative text for instance of SVG arrow
+	 *
+	 * @param {string} dir Direction of arrow
+	 * @return {string} Text for alt attribute of SVG
+	 * @memberof Arrow
+	 */
 	altDir(dir: string): string {
 		return `A ${dir} arrow`;
 	}
 }
 
 class Tile {
+	/**
+	 * Creates an instance of a grid tile for storing content information in the model.
+	 * @param {Coord} _pos Position of tile in Y, X space
+	 * @param {Content} _content Type of content in tile: start, end, enemy, health
+	 * @param {number} _value Value of content in tile
+	 * @param {(Direction | null)} _dir Direction tile points to in traceback algorithm when computing the path
+	 * @memberof Tile
+	 */
 	constructor(
 		protected _pos: Coord,
 		protected _content: Content,

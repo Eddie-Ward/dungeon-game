@@ -1,15 +1,24 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 // Classes
 class Level {
+    _index;
+    _dimGrid;
+    _randWeight;
+    _maxValueEnemy;
+    _maxValueHealth;
+    _scoreMulti;
+    _hints;
+    /**
+     * Creates an instance of Level.
+     * @param {number} _index Index of level in array, also used for determining starting HP
+     * @param {number} _dimGrid Dimensions of grid to generate based on level
+     * @param {number[]} _randWeight Weight that determines ratio of enemy to health tiles for randomizer
+     * @param {number} _maxValueEnemy Max value for enemy tile
+     * @param {number} _maxValueHealth Max value for health tile
+     * @param {number} _scoreMulti Score multiplier (unimplemented)
+     * @param {number} _hints Number of hints to show
+     * @memberof Level Difficulty of the current round
+     */
     constructor(_index, _dimGrid, _randWeight, _maxValueEnemy, _maxValueHealth, _scoreMulti, _hints) {
         this._index = _index;
         this._dimGrid = _dimGrid;
@@ -42,6 +51,14 @@ class Level {
     }
 }
 class Sprite {
+    _type;
+    /**
+     * Creates an instance of a sprite for adding to tile.
+     * SVG Vectors obtained from https://www.svgrepo.com/collection/role-playing-game/
+     *
+     * @param {string} _type Name of vector, relates to src file and file location
+     * @memberof Sprite SVG of sprite to add to board
+     */
     constructor(_type) {
         this._type = _type;
     }
@@ -59,15 +76,42 @@ class Sprite {
     }
 }
 class Arrow extends Sprite {
+    _type;
+    /**
+     * Creates an instance of arrow SVG for adding to tile for visualizer mode.
+     * SVG Vector obtained from https://www.svgrepo.com/vectors/arrow/
+     *
+     * @param {string} _type
+     * @memberof Arrow SVG arrow to add to board
+     */
     constructor(_type) {
         super(_type);
         this._type = _type;
     }
+    /**
+     * Generates alternative text for instance of SVG arrow
+     *
+     * @param {string} dir Direction of arrow
+     * @return {string} Text for alt attribute of SVG
+     * @memberof Arrow
+     */
     altDir(dir) {
         return `A ${dir} arrow`;
     }
 }
 class Tile {
+    _pos;
+    _content;
+    _value;
+    _dir;
+    /**
+     * Creates an instance of a grid tile for storing content information in the model.
+     * @param {Coord} _pos Position of tile in Y, X space
+     * @param {Content} _content Type of content in tile: start, end, enemy, health
+     * @param {number} _value Value of content in tile
+     * @param {(Direction | null)} _dir Direction tile points to in traceback algorithm when computing the path
+     * @memberof Tile
+     */
     constructor(_pos, _content, _value, _dir) {
         this._pos = _pos;
         this._content = _content;
@@ -350,12 +394,12 @@ function renderKnight(direction, target) {
 }
 function renderShake(target) {
     function removeShake() {
-        if (target === null || target === void 0 ? void 0 : target.classList.contains("js-shake")) {
+        if (target?.classList.contains("js-shake")) {
             target.classList.remove("js-shake");
         }
     }
     removeShake();
-    target === null || target === void 0 ? void 0 : target.classList.add("js-shake");
+    target?.classList.add("js-shake");
     setTimeout(removeShake, 500);
 }
 function renderNextValid(curPos, curValid, renderTilesEl) {
@@ -414,29 +458,27 @@ function storePath(renderTilesEl, path) {
     }
     return pathTilesEl;
 }
-function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let row = renderTilesEl.length - 1; row >= 0; row--) {
-            for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
-                if (!visualizeState || resetBoardCall) {
-                    return Promise.resolve();
-                }
-                renderTilesEl[row][col].classList.remove("js-visualize-off");
-                yield wait(100);
-            }
+async function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
+    for (let row = renderTilesEl.length - 1; row >= 0; row--) {
+        for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
             if (!visualizeState || resetBoardCall) {
                 return Promise.resolve();
             }
+            renderTilesEl[row][col].classList.remove("js-visualize-off");
+            await wait(100);
         }
-        for (let i = 0; i < pathTilesEl.length; i++) {
-            if (!visualizeState || resetBoardCall) {
-                return Promise.resolve();
-            }
-            pathTilesEl[i].tileEl.classList.add("js-show-path");
-            console.log(`Showing path tile ${i}`);
-            yield wait(100);
+        if (!visualizeState || resetBoardCall) {
+            return Promise.resolve();
         }
-    });
+    }
+    for (let i = 0; i < pathTilesEl.length; i++) {
+        if (!visualizeState || resetBoardCall) {
+            return Promise.resolve();
+        }
+        pathTilesEl[i].tileEl.classList.add("js-show-path");
+        console.log(`Showing path tile ${i}`);
+        await wait(100);
+    }
 }
 function hideTileArrowsEl(renderTilesEl, pathTilesEl) {
     for (let row = renderTilesEl.length - 1; row >= 0; row--) {
@@ -472,10 +514,9 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
 }
 // Callback functions for listeners
 function onTileClick(event) {
-    var _a;
     let target = event.target;
     if ((target.tagName === "IMG" || target.tagName === "P") &&
-        !((_a = target.parentElement) === null || _a === void 0 ? void 0 : _a.classList.contains("container-knight"))) {
+        !target.parentElement?.classList.contains("container-knight")) {
         target = target.parentElement;
     }
     if (target && target.dataset.X) {
@@ -503,33 +544,31 @@ function onTileClick(event) {
         }
     }
 }
-function resetBoard() {
-    return __awaiter(this, void 0, void 0, function* () {
-        resetBoardCall = true;
-        if (modalScreenEl.open) {
-            modalScreenEl.close();
-        }
-        // Reset position and HP
-        currentPos = START;
-        [currentHP, currentGrid] = calcGrid(currentGrid);
-        // Deleting the existing grid on the DOM
-        while (gridParentEl.firstChild) {
-            gridParentEl.removeChild(gridParentEl.firstChild);
-        }
-        // Recreate knight element, but not assigned to any children yet.
-        knightEl = createKnight(knight);
-        // Render new grid on DOM, with knight element
-        renderTilesEl = renderGrid(currentGrid, gridParentEl);
-        nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
-        pathTilesEl = storePath(renderTilesEl, currentGrid);
-        // Render HP on DOM
-        healthEl.innerText = `HP: ${currentHP}`;
-        yield wait(250);
-        resetBoardCall = false;
-        if (visualizeState && !resetBoardCall) {
-            renderTileArrowsEl(renderTilesEl, pathTilesEl);
-        }
-    });
+async function resetBoard() {
+    resetBoardCall = true;
+    if (modalScreenEl.open) {
+        modalScreenEl.close();
+    }
+    // Reset position and HP
+    currentPos = START;
+    [currentHP, currentGrid] = calcGrid(currentGrid);
+    // Deleting the existing grid on the DOM
+    while (gridParentEl.firstChild) {
+        gridParentEl.removeChild(gridParentEl.firstChild);
+    }
+    // Recreate knight element, but not assigned to any children yet.
+    knightEl = createKnight(knight);
+    // Render new grid on DOM, with knight element
+    renderTilesEl = renderGrid(currentGrid, gridParentEl);
+    nextValidTilesEl = renderNextValid(currentPos, nextValidTilesEl, renderTilesEl);
+    pathTilesEl = storePath(renderTilesEl, currentGrid);
+    // Render HP on DOM
+    healthEl.innerText = `HP: ${currentHP}`;
+    await wait(250);
+    resetBoardCall = false;
+    if (visualizeState && !resetBoardCall) {
+        renderTileArrowsEl(renderTilesEl, pathTilesEl);
+    }
 }
 function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
