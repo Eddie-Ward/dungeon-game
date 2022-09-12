@@ -25,7 +25,10 @@
 				<div class="game-status container padding-inline padding-top-small">
 					<p class="tutorial">Reach the goal without hitting 0 HP!</p>
 					<p class="tutorial">You can only move down or right.</p>
-					<div class="status hp-left || padding-top-small | js-status">HP:</div>
+					<div class="round-status container || flex-row padding-top-small">
+						<div class="status hp-left || js-status">HP:</div>
+						<button class="mode-button || flex-grow-0 js-btn-visualize">Visualizer: Off</button>
+					</div>
 				</div>
 			</section>
 			<section class="game-screen || padding-top-medium padding-inline">
@@ -44,7 +47,6 @@
 					</div>
 				</div>
 			</section>
-			<!-- <section class="end-game"> -->
 			<dialog class="js-modal">
 				<div class="modal-screen container || flex-col padding-inline padding-top-medium padding-bottom">
 					<h2 class="modal-header || js-modal-header"></h2>
@@ -58,7 +60,6 @@
 					</div>
 				</div>
 			</dialog>
-			<!-- </section> -->
 		</main>
 		<footer></footer>
 	</body>

@@ -63,6 +63,15 @@ class Sprite {
 	}
 }
 
+class Arrow extends Sprite {
+	constructor(protected _type: string) {
+		super(_type);
+	}
+	altDir(dir: string): string {
+		return `A ${dir} arrow`;
+	}
+}
+
 class Tile {
 	constructor(
 		protected _pos: Coord,
@@ -90,9 +99,9 @@ class Tile {
 // Global constants
 
 const START: Coord = { y: 0, x: 0 };
-const STATUSES = {
-	HP: 0,
-	SCORE: 1,
+const ARROW_INDEX = {
+	DOWN: 0,
+	RIGHT: 1,
 };
 
 const spider = new Sprite("spider");
@@ -108,6 +117,10 @@ const HEALTH = [meat, potion];
 const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
+
+const downArrow = new Arrow("down-arrow");
+const rightArrow = new Arrow("right-arrow");
+const ARROWS = [downArrow, rightArrow];
 
 const TILE_CONTENT: Content[] = ["enemy", "potion"];
 const LVL_NAMES = ["Easy", "Med", "Hard"];
@@ -281,7 +294,7 @@ function createKnight(sprite: Sprite): HTMLDivElement {
 
 function renderSprite(
 	imgElement: HTMLImageElement,
-	sprites: Sprite[],
+	sprites: Sprite[] | Arrow[],
 	index: number,
 	value?: number
 ): HTMLImageElement {
@@ -298,6 +311,7 @@ function renderSprite(
 function renderTile(tile: Tile): HTMLElement {
 	const container = document.createElement("div");
 	let svgSprite = document.createElement("img");
+	let svgArrow = document.createElement("img");
 	let valueText = document.createElement("p");
 	container.dataset.X = tile.pos.x.toString();
 	container.dataset.Y = tile.pos.y.toString();
@@ -328,6 +342,17 @@ function renderTile(tile: Tile): HTMLElement {
 		valueText.classList.add("text-value-goal");
 		container.classList.add("tile-finish");
 	}
+	if (tile.dir && tile.dir !== "end") {
+		if (tile.dir === "right") {
+			svgArrow = renderSprite(svgArrow, ARROWS, ARROW_INDEX.RIGHT);
+			svgArrow.alt = rightArrow.altDir("right");
+		} else {
+			svgArrow = renderSprite(svgArrow, ARROWS, ARROW_INDEX.DOWN);
+			svgArrow.alt = rightArrow.altDir("down");
+		}
+		container.appendChild(svgArrow);
+	}
+
 	if (tile.content === "start") {
 		//Add knight to the tile if it is the start tile
 		container.appendChild(knightEl);

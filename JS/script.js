@@ -57,6 +57,16 @@ class Sprite {
         return `${this.type} with ${value} HP`;
     }
 }
+class Arrow extends Sprite {
+    _type;
+    constructor(_type) {
+        super(_type);
+        this._type = _type;
+    }
+    altDir(dir) {
+        return `A ${dir} arrow`;
+    }
+}
 class Tile {
     _pos;
     _content;
@@ -86,9 +96,9 @@ class Tile {
 }
 // Global constants
 const START = { y: 0, x: 0 };
-const STATUSES = {
-    HP: 0,
-    SCORE: 1,
+const ARROW_INDEX = {
+    DOWN: 0,
+    RIGHT: 1,
 };
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
@@ -101,6 +111,9 @@ const HEALTH = [meat, potion];
 const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
+const downArrow = new Arrow("down-arrow");
+const rightArrow = new Arrow("right-arrow");
+const ARROWS = [downArrow, rightArrow];
 const TILE_CONTENT = ["enemy", "potion"];
 const LVL_NAMES = ["Easy", "Med", "Hard"];
 const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9, 1);
@@ -255,6 +268,7 @@ function renderSprite(imgElement, sprites, index, value) {
 function renderTile(tile) {
     const container = document.createElement("div");
     let svgSprite = document.createElement("img");
+    let svgArrow = document.createElement("img");
     let valueText = document.createElement("p");
     container.dataset.X = tile.pos.x.toString();
     container.dataset.Y = tile.pos.y.toString();
@@ -283,6 +297,17 @@ function renderTile(tile) {
         valueText.innerText = "Goal";
         valueText.classList.add("text-value-goal");
         container.classList.add("tile-finish");
+    }
+    if (tile.dir && tile.dir !== "end") {
+        if (tile.dir === "right") {
+            svgArrow = renderSprite(svgArrow, ARROWS, ARROW_INDEX.RIGHT);
+            svgArrow.alt = rightArrow.altDir("right");
+        }
+        else {
+            svgArrow = renderSprite(svgArrow, ARROWS, ARROW_INDEX.DOWN);
+            svgArrow.alt = rightArrow.altDir("down");
+        }
+        container.appendChild(svgArrow);
     }
     if (tile.content === "start") {
         //Add knight to the tile if it is the start tile

@@ -119,6 +119,10 @@ button:hover {
 	flex-grow: 1;
 }
 
+.flex-grow-0 {
+	flex-grow: 0;
+}
+
 .grid {
 	display: grid;
 }
@@ -230,7 +234,7 @@ div[class^="tile"] {
 	animation-timing-function: ease-in-out;
 }
 
-.tile-selected img[class^="svg"]:not(.svg-knight),
+.tile-selected img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow),
 .tile-selected p[class^="text-value"]:not(.text-value-knight, .text-value-start) {
 	opacity: 20%;
 	color: var(--clr-text-selected);
@@ -278,13 +282,36 @@ img[class^="svg"] {
 	background-color: transparent;
 }
 
-.tile-next img[class^="svg"]:not(.svg-knight) {
+.tile-next img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow) {
 	animation: float 3s ease-in-out infinite;
 }
 
-.tile-next img[class^="svg"]:not(.svg-knight):hover {
+.tile-next img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow):hover {
 	animation: none;
 	transform: scale(0.8, 0.8);
+}
+
+img.svg-right-arrow,
+img.svg-down-arrow {
+	position: absolute;
+	z-index: 1;
+	transform: scale(0.25, 0.25);
+	animation: none;
+	filter: brightness(0) saturate(100%) invert(14%) sepia(42%) saturate(2592%) hue-rotate(320deg) brightness(97%)
+		contrast(87%);
+}
+
+img.svg-right-arrow {
+	right: -50%;
+}
+
+img.svg-down-arrow {
+	bottom: -50%;
+}
+
+img.svg-path {
+	filter: brightness(0) saturate(100%) invert(29%) sepia(7%) saturate(3183%) hue-rotate(80deg) brightness(105%)
+		contrast(80%);
 }
 
 .container-knight.js-shake .svg-knight {
