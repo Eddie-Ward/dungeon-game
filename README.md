@@ -1,6 +1,7 @@
 # Dungeon Tiles
 
 **Dungeon Tiles** is a game inspired from Leetcode [Problem #174](https://leetcode.com/problems/dungeon-game/). You are a knight entering a dungeon trying to reach the treasure. Along the way, you will encounter either enemies that you have to fight, losing health in the process, or you will discover health and restoration items to heal your wounds. Can you reach the treasure while staying alive?
+
 ![Screenshot of game in browser](./SRC/Readme/Screenshot.jpg)
 
 ## Rules and features
@@ -51,7 +52,9 @@
 - I want to be able to visualize the algorithm it is using to find the best path.
 
 ## Wireframes
+
 ![Randomly generated board state](./SRC/Readme/Proposal_Wireframes.jpg)
+
 ![Wireframe game interface](./SRC/Readme/Proposal_Wireframes3.jpg)
 
 ## Challenges
