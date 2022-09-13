@@ -49,7 +49,7 @@
 	--margin-small: 0.75rem;
 	--margin-medium: 1.5rem;
 
-	--padding-small: 0.7rem;
+	--padding-small: 0.875rem;
 	--padding-medium: 1.5rem;
 	--padding-large: 3rem;
 }
@@ -119,6 +119,10 @@ button:hover {
 	flex-grow: 1;
 }
 
+.flex-grow-0 {
+	flex-grow: 0;
+}
+
 .grid {
 	display: grid;
 }
@@ -140,7 +144,7 @@ button:hover {
 }
 
 .padding-top-medium {
-	padding-top: var(--padding-medium);
+	padding-top: clamp(var(--padding-medium), 3vh, 2rem);
 }
 
 .padding-bottom {
@@ -155,6 +159,10 @@ button:hover {
 
 .js-off {
 	display: none;
+}
+
+.js-button-on {
+	background-color: var(--clr-bg-health);
 }
 
 .knight-right {
@@ -186,12 +194,9 @@ button:hover {
 
 /* Main game grid */
 .game-grid {
-	/* grid-template-columns: repeat(4, 1fr); */
-	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
 	max-width: 52rem;
-	/* padding: var(--margin-medium); */
 }
 
 div[class^="tile"] {
@@ -222,15 +227,14 @@ div[class^="tile"] {
 	color: var(--clr-text-goal);
 }
 
-.tile-hint {
-	/* background-color: var(--clr-bg-goal); */
-	animation-name: hint-glow;
+.tile-hint > * {
+	animation-name: hint;
 	animation-duration: 1s;
 	animation-iteration-count: 2;
 	animation-timing-function: ease-in-out;
 }
 
-.tile-selected img[class^="svg"]:not(.svg-knight),
+.tile-selected img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow),
 .tile-selected p[class^="text-value"]:not(.text-value-knight, .text-value-start) {
 	opacity: 20%;
 	color: var(--clr-text-selected);
@@ -278,13 +282,43 @@ img[class^="svg"] {
 	background-color: transparent;
 }
 
-.tile-next img[class^="svg"]:not(.svg-knight) {
+.tile-next:not(.tile-hint) img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow) {
 	animation: float 3s ease-in-out infinite;
 }
 
-.tile-next img[class^="svg"]:not(.svg-knight):hover {
+.tile-next img[class^="svg"]:not(.svg-knight, .svg-right-arrow, .svg-down-arrow):hover {
 	animation: none;
 	transform: scale(0.8, 0.8);
+}
+
+/* Color generator from filter
+   Source: https://codepen.io/sosuke/pen/Pjoqqp */
+img.svg-right-arrow,
+img.svg-down-arrow {
+	position: absolute;
+	z-index: 5;
+	transform: scale(0.25, 0.25);
+	animation: none;
+	filter: brightness(0) saturate(100%) invert(14%) sepia(42%) saturate(2592%) hue-rotate(320deg) brightness(97%)
+		contrast(87%);
+}
+
+img.svg-right-arrow {
+	right: -50%;
+}
+
+img.svg-down-arrow {
+	bottom: -50%;
+}
+
+.js-show-path img:is(.svg-right-arrow, .svg-down-arrow) {
+	filter: brightness(0) saturate(100%) invert(29%) sepia(7%) saturate(3183%) hue-rotate(80deg) brightness(105%)
+		contrast(80%);
+	transform: scale(0.5, 0.5);
+}
+
+.js-visualize-off img:is(.svg-right-arrow, .svg-down-arrow) {
+	display: none;
 }
 
 .container-knight.js-shake .svg-knight {
@@ -333,6 +367,10 @@ img[class^="svg"] {
 	}
 }
 
+/* Animations */
+
+/* Shake animation source
+   https://codepen.io/jh3y/pen/yLKMOBm */
 @keyframes shake {
 	0%,
 	100% {
@@ -353,12 +391,26 @@ img[class^="svg"] {
 	}
 }
 
-@keyframes hint-glow {
-	0%,
-	100% {
-		filter: saturate(100%);
+/* Floating animation source
+   https://codepen.io/MarioDesigns/pen/woJgeo */
+@keyframes float {
+	0% {
+		transform: translatey(0px) scale(0.6, 0.6);
 	}
 	50% {
-		filter: saturate(250%);
+		transform: translatey(-6%) scale(0.65, 0.65);
+	}
+	100% {
+		transform: translatey(0px) scale(0.6, 0.6);
+	}
+}
+
+@keyframes hint {
+	0%,
+	100% {
+		opacity: 100%;
+	}
+	50% {
+		opacity: 30%;
 	}
 }
