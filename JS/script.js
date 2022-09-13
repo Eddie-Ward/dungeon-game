@@ -242,6 +242,20 @@ function randWeight(weight) {
 function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
+/**
+ * * Timer for waiting certain time in milliseconds
+ *
+ * ! Requires browser support for ES7 (async-await)
+ *
+ * Uses async await syntax based on source:
+ * https://stackoverflow.com/questions/3583724/how-do-i-add-a-delay-in-a-javascript-loop
+ *
+ * @param {number} ms Time in milliseconds to return resolved promise
+ * @return {Promise} Resolved promise after certain time for use in async-await functions
+ */
+function wait(ms) {
+    return new Promise((res) => setTimeout(res, ms));
+}
 // * Create objects on model
 /**
  * * Generates grid of specified dimensions with random content in each tile
@@ -560,6 +574,36 @@ function storePath(renderTilesEl, path) {
     return pathTilesEl;
 }
 /**
+ * * Randomly picks hint tiles to display based on difficulty
+ * Will not pick hints from solution path that the player has already traversed past
+ *
+ * @param {Coord} curPos Current position as Coord object
+ * @param {Level} curLevel Current difficulty level as Level object
+ * @param {PathTile[]} pathTilesEl Array of PathTile elements representing the solution path
+ * @return {PathTile[]} Array of selected PathTile elements to display as hints
+ */
+function pickHints(curPos, curLevel, pathTilesEl) {
+    const validTiles = pathTilesEl.filter((pathTile) => {
+        if (pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y) {
+            if (pathTile.pos.x === curPos.x && pathTile.pos.y === curPos.y) {
+                return false;
+            }
+            return true;
+        }
+    });
+    const tilesShown = [];
+    if (curLevel.hints >= validTiles.length) {
+        return validTiles;
+    }
+    else {
+        while (tilesShown.length < curLevel.hints) {
+            const index = randRange(0, validTiles.length);
+            tilesShown.push(validTiles.splice(index, 1)[0]);
+        }
+    }
+    return tilesShown;
+}
+/**
  * * If visualization mode is on, render arrows that denote direction from traceback algorithm, then highlights solution path
  * Uses timer of 100ms to represent iteration of traceback algorithm
  * Returns promise early if there is a resetBoard() call or visualization mode is off.
@@ -628,6 +672,15 @@ function moveIsValid(curPos, movePos) {
     }
     return false;
 }
+/**
+ * * Calculates new HP based on move
+ *
+ * @param {number} curHP Current HP
+ * @param {Coord} curPos Current position as Coord object
+ * @param {Coord} movePos Final target position as Coord object
+ * @param {Tile[][]} matrixGrid 2D Array of Tile instances that represent current grid in Model
+ * @return {number} newHP New HP after move
+ */
 function processHP(curHP, curPos, movePos, matrixGrid) {
     let newHP = curHP;
     if (matrixGrid[movePos.y][movePos.x].content === "enemy") {
@@ -641,13 +694,27 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
     }
     return newHP;
 }
-// Callback functions for listeners
+// * Callback functions for listeners
+/**
+ * * Callback function for click on a tile
+ * Uses event propogation for one event listener on the container for game grid
+ * Clicking on SVG or background of grid or text value are all valid inputs, except for clicking on the knight itself
+ * If tile is valid, processes the move and determines if the round continues, round ends in defeat, or round ends in victory
+ * Else, knight will shake to indicate the move is invalid
+ *
+ * ! Requires currentPos, targetPos, currentHP, currentGrid
+ * ! Requires knightEl, healthEl, nextValidTilesEl, renderTilesEl
+ *
+ * @param {Event} event
+ */
 function onTileClick(event) {
     let target = event.target;
+    // Selects parent container if mouse target is SVG or text-value of tile but not if the target were the knight itself
     if ((target.tagName === "IMG" || target.tagName === "P") &&
         !target.parentElement?.classList.contains("container-knight")) {
         target = target.parentElement;
     }
+    // If selected or updated target is a valid grid tile, determine if the move is valid, if the game continues or ends in defeat/victory
     if (target && target.dataset.X) {
         const targetPos = { y: parseInt(target.dataset.Y), x: parseInt(target.dataset.X) };
         const direction = moveIsValid(currentPos, targetPos);
@@ -673,6 +740,21 @@ function onTileClick(event) {
         }
     }
 }
+/**
+ * * Reset the board state with the same generated grid, updating all global variables
+ * Removes all elements from DOM and recreates them to show default state of generated grid
+ * Also the callback function for Reset Board button
+ *
+ * Uses async await to trigger resetBoardCall to be true for enough time to resolve renderTileArrowsEl function early
+ * This is to avoid extraneous functions on the call stack when visualization mode is on and the board is reset or updated
+ * before the current board visualization is finished
+ *
+ * ! Requires currentPos, currentHP, currentGrid, knight Sprite
+ * ! Requires modalScreenEl, gridParentEl, healthEl from query selector
+ * ! Requires and updates knightEl, renderTilesEl, nextValidTilesEl, pathTilesEl
+ * ! Requires browser support for ES7 (async-await)
+ *
+ */
 async function resetBoard() {
     resetBoardCall = true;
     if (modalScreenEl.open) {
@@ -699,31 +781,23 @@ async function resetBoard() {
         renderTileArrowsEl(renderTilesEl, pathTilesEl);
     }
 }
+/**
+ * * Generates a new random grid and board based on difficulty
+ * Also callback function for New Board button
+ *
+ * ! Requires currentGrid and currentLevel
+ *
+ */
 function newBoard() {
     currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
     resetBoard();
 }
-function pickHints(curPos, curLevel, pathTilesEl) {
-    const validTiles = pathTilesEl.filter((pathTile) => {
-        if (pathTile.pos.x >= curPos.x && pathTile.pos.y >= curPos.y) {
-            if (pathTile.pos.x === curPos.x && pathTile.pos.y === curPos.y) {
-                return false;
-            }
-            return true;
-        }
-    });
-    const tilesShown = [];
-    if (curLevel.hints >= validTiles.length) {
-        return validTiles;
-    }
-    else {
-        while (tilesShown.length < curLevel.hints) {
-            const index = randRange(0, validTiles.length);
-            tilesShown.push(validTiles.splice(index, 1)[0]);
-        }
-    }
-    return tilesShown;
-}
+/**
+ * * Renders randomly selected tiles to view as hints of the solution path
+ * Callback function for Show Hint button
+ *
+ * ! Requires currentGrid, pathTilesEl, renderTilesEl
+ */
 function renderHint() {
     pathTilesEl = storePath(renderTilesEl, currentGrid);
     console.log("pathTilesEl", pathTilesEl);
@@ -736,6 +810,13 @@ function renderHint() {
     toggleStyle();
     setTimeout(toggleStyle, 2000);
 }
+/**
+ * * Changes difficulty level and generates new board to match new level
+ * Callback function for Difficulty button
+ *
+ * ! Requires btnDiffEl from query selector
+ * ! Requires and updates currentLevel, enemiesRank, healthRank
+ */
 function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
     enemiesRank = Math.floor(currentLevel.maxValueEnemy / ENEMIES.length);
@@ -743,6 +824,14 @@ function changeLevel() {
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
     newBoard();
 }
+/**
+ * * Toggles visualizer mode to show traceback algorithm and computed solution path
+ * Callback function for Visualizer button
+ * Renders arrows or hides them depending on new state
+ *
+ * ! Requires btnVisualizeEl from query selector
+ * ! Requires visualizeState, resetBoardCall, renderTilesEl, pathTilesEl
+ */
 function visualizerToggle() {
     visualizeState = !visualizeState;
     btnVisualizeEl.classList.toggle("js-button-on");
@@ -753,7 +842,4 @@ function visualizerToggle() {
     else {
         hideTileArrowsEl(renderTilesEl, pathTilesEl);
     }
-}
-function wait(ms) {
-    return new Promise((res) => setTimeout(res, ms));
 }
