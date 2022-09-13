@@ -293,7 +293,6 @@ function createGrid(row, col) {
         }
         gameMatrix.push(gameRow);
     }
-    console.log(gameMatrix);
     return gameMatrix;
 }
 /**
@@ -368,9 +367,6 @@ function createKnight(sprite) {
  * @return {HTMLImageElement}  Returns the input imgElement with the correct SVG element
  */
 function renderSprite(imgElement, sprites, index, value) {
-    if (index > sprites.length) {
-        console.log(`Failed to find ${index}`);
-    }
     imgElement.src = sprites[index].src();
     if (value) {
         imgElement.alt = sprites[index].alt(value);
@@ -513,24 +509,20 @@ function renderNextValid(curPos, curValid, renderTilesEl) {
     });
     const [n, m] = [renderTilesEl[0].length, renderTilesEl.length];
     if (curPos.y === m - 1) {
-        // console.log(`Currently at max ${curPos.y}`);
         if (curPos.x === n - 1) {
             return [];
         }
         curValid = [renderTilesEl[curPos.y][curPos.x + 1]];
     }
     else if (curPos.x === n - 1) {
-        // console.log(`Currently at max ${curPos.x}`);
         curValid = [renderTilesEl[curPos.y + 1][curPos.x]];
     }
     else {
-        // console.log(`Currently at ${curPos.y}, ${curPos.x}`);
         curValid = [renderTilesEl[curPos.y][curPos.x + 1], renderTilesEl[curPos.y + 1][curPos.x]];
     }
     curValid.forEach((tileEl) => {
         tileEl.classList.add("tile-next");
     });
-    // console.log(curValid);
     return curValid;
 }
 /**
@@ -636,7 +628,6 @@ async function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
             return Promise.resolve();
         }
         pathTilesEl[i].tileEl.classList.add("js-show-path");
-        console.log(`Showing path tile ${i}`);
         await wait(100);
     }
 }
@@ -705,7 +696,7 @@ function processHP(curHP, curPos, movePos, matrixGrid) {
  * ! Requires currentPos, targetPos, currentHP, currentGrid
  * ! Requires knightEl, healthEl, nextValidTilesEl, renderTilesEl
  *
- * @param {Event} event
+ * @param {Event} event Event triggered from listener
  */
 function onTileClick(event) {
     let target = event.target;
@@ -800,7 +791,6 @@ function newBoard() {
  */
 function renderHint() {
     pathTilesEl = storePath(renderTilesEl, currentGrid);
-    console.log("pathTilesEl", pathTilesEl);
     let tilesPicked = pickHints(currentPos, currentLevel, pathTilesEl);
     function toggleStyle() {
         tilesPicked.forEach((tile) => {
