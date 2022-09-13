@@ -1,5 +1,5 @@
 "use strict";
-// Classes
+// * CLASSES
 class Level {
     _index;
     _dimGrid;
@@ -9,7 +9,7 @@ class Level {
     _scoreMulti;
     _hints;
     /**
-     * Creates an instance of Level.
+     * * Creates an instance of Level.
      * @param {number} _index Index of level in array, also used for determining starting HP
      * @param {number} _dimGrid Dimensions of grid to generate based on level
      * @param {number[]} _randWeight Weight that determines ratio of enemy to health tiles for randomizer
@@ -53,7 +53,7 @@ class Level {
 class Sprite {
     _type;
     /**
-     * Creates an instance of a sprite for adding to tile.
+     * * Creates an instance of a sprite for adding to tile.
      * SVG Vectors obtained from https://www.svgrepo.com/collection/role-playing-game/
      *
      * @param {string} _type Name of vector, relates to src file and file location
@@ -78,7 +78,7 @@ class Sprite {
 class Arrow extends Sprite {
     _type;
     /**
-     * Creates an instance of arrow SVG for adding to tile for visualizer mode.
+     * * Creates an instance of arrow SVG for adding to tile for visualizer mode.
      * SVG Vector obtained from https://www.svgrepo.com/vectors/arrow/
      *
      * @param {string} _type
@@ -89,7 +89,7 @@ class Arrow extends Sprite {
         this._type = _type;
     }
     /**
-     * Generates alternative text for instance of SVG arrow
+     * * Generates alternative text for instance of SVG arrow
      *
      * @param {string} dir Direction of arrow
      * @return {string} Text for alt attribute of SVG
@@ -105,7 +105,7 @@ class Tile {
     _value;
     _dir;
     /**
-     * Creates an instance of a grid tile for storing content information in the model.
+     * * Creates an instance of a grid tile for storing content information in the model.
      * @param {Coord} _pos Position of tile in Y, X space
      * @param {Content} _content Type of content in tile: start, end, enemy, health
      * @param {number} _value Value of content in tile
@@ -134,33 +134,38 @@ class Tile {
         this._dir = value;
     }
 }
-// Global constants
+// * GLOBAL CONSTANTS
 const START = { y: 0, x: 0 };
 const ARROW_INDEX = {
     DOWN: 0,
     RIGHT: 1,
 };
+// * Enemy sprites
 const spider = new Sprite("spider");
 const orc = new Sprite("orc");
 const reaper = new Sprite("reaper");
 const dragon = new Sprite("dragon");
 const ENEMIES = [spider, orc, reaper, dragon];
+// * Health sprites
 const meat = new Sprite("meat");
 const potion = new Sprite("potion");
 const HEALTH = [meat, potion];
+// * Knight and tresure sprites
 const knight = new Sprite("knight");
 const treasure = new Sprite("treasure");
 const GOAL = [treasure];
+// * Arrow sprites
 const downArrow = new Arrow("down-arrow");
 const rightArrow = new Arrow("right-arrow");
 const ARROWS = [downArrow, rightArrow];
 const TILE_CONTENT = ["enemy", "potion"];
+// * Difficulty levels
 const LVL_NAMES = ["Easy", "Med", "Hard"];
 const EASY = new Level(0, 4, [0.7, 0.3], 16, 8, 0.9, 1);
 const MEDIUM = new Level(1, 6, [0.775, 0.225], 20, 6, 1.1, 3);
 const HARD = new Level(2, 8, [0.85, 0.15], 32, 4, 2, 3);
 const levels = [EASY, MEDIUM, HARD];
-// Query select DOM elements
+// * DOM ELEMENTS SELECTED
 const healthEl = document.querySelector(".js-status");
 const gridParentEl = document.querySelector(".js-grid");
 const btnsResetEl = document.querySelectorAll(".js-btn-reset");
@@ -171,26 +176,24 @@ const btnVisualizeEl = document.querySelector(".js-btn-visualize");
 const modalScreenEl = document.querySelector(".js-modal");
 const modalHeaderEl = document.querySelector(".js-modal-header");
 const modalMessageEl = document.querySelector(".js-modal-message");
-// Initialize global variables
+// * GLOBAL VARIABLES
 let currentPos = START;
 let currentHP = 0;
 let currentLevel = levels[0];
 let visualizeState = false;
 let resetBoardCall = false;
-let curMaxEnemy = currentLevel.maxValueEnemy;
-let curMaxHealth = currentLevel.maxValueHealth;
-let enemiesRank = Math.floor(curMaxEnemy / ENEMIES.length);
-let healthRank = Math.floor(curMaxHealth / HEALTH.length);
-// Create matrix and knight in model
+let enemiesRank = Math.floor(currentLevel.maxValueEnemy / ENEMIES.length);
+let healthRank = Math.floor(currentLevel.maxValueHealth / HEALTH.length);
+// * Create matrix and knight in model
 let currentGrid = createGrid(currentLevel.dimGrid, currentLevel.dimGrid);
 [currentHP, currentGrid] = calcGrid(currentGrid);
 let knightEl = createKnight(knight);
-// Render grid and current HP to DOM
+// * Render grid and current HP to DOM
 let renderTilesEl = renderGrid(currentGrid, gridParentEl);
 let nextValidTilesEl = renderNextValid(currentPos, [], renderTilesEl);
 healthEl.innerText = `HP: ${currentHP}`;
 let pathTilesEl = storePath(renderTilesEl, currentGrid);
-// Add event listeners
+// * EVENT LISTENERS
 gridParentEl.addEventListener("click", onTileClick);
 for (const btn of btnsResetEl) {
     btn.addEventListener("click", resetBoard);
@@ -207,8 +210,15 @@ btnDiffEl.addEventListener("mouseout", () => {
 });
 btnHintEl.addEventListener("click", renderHint);
 btnVisualizeEl.addEventListener("click", visualizerToggle);
-//Functions
-//Random number generators
+// * FUNCTIONS
+// * Random number generators
+/**
+ * * Weighted random number generator.
+ * Used for determining tile type based on difficulty
+ *
+ * @param {number[]} weight Array of representing the weighted ratio of outcomes
+ * @return {number} Returns the selected choice as an index of the random outcome
+ */
 function randWeight(weight) {
     let random = Math.random();
     for (let i = 0; i < weight.length; i++) {
@@ -221,12 +231,29 @@ function randWeight(weight) {
     }
     return 0;
 }
+/**
+ * * Random number generator within a specific range.
+ * ! Max is not included
+ *
+ * @param {number} min Minimum number inside the range
+ * @param {number} max Maximum number outside of the range
+ * @return {number} Random number within specified range
+ */
 function randRange(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
-//Create objects on model
+// * Create objects on model
+/**
+ * * Generates grid of specified dimensions with random content in each tile
+ * Dimensions and content type and value are based on current difficulty
+ *
+ * ! Needs currentLevel in global scope
+ *
+ * @param {number} row Number of rows of grid
+ * @param {number} col Number of columns of grid
+ * @return {Tile[][]} gameMatrix 2D Array of Tile instances representing the grid in model
+ */
 function createGrid(row, col) {
-    // console.log(`Generating ${row} by ${col} grid`);
     const gameMatrix = [];
     for (let i = 0; i < row; i++) {
         const gameRow = [];
@@ -240,7 +267,7 @@ function createGrid(row, col) {
             }
             else {
                 const index = randWeight(currentLevel.randWeight);
-                const maxValues = [curMaxEnemy, curMaxHealth];
+                const maxValues = [currentLevel.maxValueEnemy, currentLevel.maxValueHealth];
                 tile = new Tile({ y: i, x: j }, TILE_CONTENT[index], randRange(1, maxValues[index]), null);
             }
             if (tile) {
@@ -252,8 +279,19 @@ function createGrid(row, col) {
         }
         gameMatrix.push(gameRow);
     }
+    console.log(gameMatrix);
     return gameMatrix;
 }
+/**
+ * * Calculates the generated grid for starting HP and updates direction for each Tile
+ * Uses dynamic programming and traceback algorithm approach for linear time complexity
+ * Modifies each tile to point to a next tile, allowing solution path to be generated
+ * by traversing a linked-list like data structure from the start tile
+ *
+ *
+ * @param {Tile[][]} grid Generated grid to process
+ * @return {[number, Tile[][]]} [Starting HP, grid] Returns starting HP for grid, and modifies input grid with directions
+ */
 function calcGrid(grid) {
     const n = grid[0].length;
     const m = grid.length;
@@ -283,6 +321,14 @@ function calcGrid(grid) {
     }
     return [dp[0][0] + 3 - currentLevel.index, grid];
 }
+/**
+ * * Creates knight container with SVG sprite of knight and current HP
+ *
+ * ! Requires knight Sprite instance and currentHP
+ *
+ * @param {Sprite} sprite SVG of knight to use
+ * @return {HTMLDivElement}  Knight container as an HTMLDivElement
+ */
 function createKnight(sprite) {
     const knightContainer = document.createElement("div");
     const knightSVG = document.createElement("img");
@@ -297,8 +343,20 @@ function createKnight(sprite) {
     knightContainer.classList.add("container-knight");
     return knightContainer;
 }
-//Render objects for view
+// * Render objects for view
+/**
+ * * Render sprite to grid tile container based on instructions
+ *
+ * @param {HTMLImageElement} imgElement HTMLImageElement that will be the img container for the sprite
+ * @param {(Sprite[] | Arrow[])} sprites Array of sprite instances to select from, usually enemy or health type
+ * @param {number} index Index of Sprite instance in particular array
+ * @param {number} [value] Optional value of tile
+ * @return {HTMLImageElement}  Returns the input imgElement with the correct SVG element
+ */
 function renderSprite(imgElement, sprites, index, value) {
+    if (index > sprites.length) {
+        console.log(`Failed to find ${index}`);
+    }
     imgElement.src = sprites[index].src();
     if (value) {
         imgElement.alt = sprites[index].alt(value);
@@ -309,6 +367,12 @@ function renderSprite(imgElement, sprites, index, value) {
     imgElement.classList.add(sprites[index].style());
     return imgElement;
 }
+/**
+ * * Render input Tile instance to view with appropriate sprite
+ *
+ * @param {Tile} tile input Tile instance for rendering
+ * @return {HTMLElement}  Returns HTMLElement that is the container for DOM representation of a grid square
+ */
 function renderTile(tile) {
     const container = document.createElement("div");
     let svgSprite = document.createElement("img");
@@ -364,6 +428,13 @@ function renderTile(tile) {
     container.classList.add("js-visualize-off");
     return container;
 }
+/**
+ * * Render grid to view
+ *
+ * @param {Tile[][]} matrix Generated grid in model
+ * @param {HTMLDivElement} gridParentEl Parent container of grid in DOM from query selector
+ * @return {HTMLElement[][]} renderTilesEl 2D Array of HTMLElements that represent the rendered grid
+ */
 function renderGrid(matrix, gridParentEl) {
     const renderTilesEl = [];
     gridParentEl.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
@@ -382,7 +453,14 @@ function renderGrid(matrix, gridParentEl) {
     }
     return renderTilesEl;
 }
-function renderKnight(direction, target) {
+/**
+ * * Render knight position to match player move and updates rendered knight HP
+ * ! Requires knightEl in global scope
+ *
+ * @param {string} direction Direction of player move represented as a string
+ * @param {HTMLElement} target Target HTML Element that the player clicks on for the knight to move to
+ */
+function renderKnightMove(direction, target) {
     knightEl.classList.add(`knight-${direction}`);
     const updateKnight = function () {
         knightEl.classList.remove(`knight-${direction}`);
@@ -392,16 +470,29 @@ function renderKnight(direction, target) {
     const knightHP = knightEl.lastElementChild;
     knightHP.innerText = currentHP.toString();
 }
-function renderShake(target) {
+/**
+ * * Render shake animation for knight if player move is invalid
+ *
+ * @param {(Element | null)} knightEl Knight element
+ */
+function renderShake(knightEl) {
     function removeShake() {
-        if (target?.classList.contains("js-shake")) {
-            target.classList.remove("js-shake");
+        if (knightEl?.classList.contains("js-shake")) {
+            knightEl.classList.remove("js-shake");
         }
     }
     removeShake();
-    target?.classList.add("js-shake");
+    knightEl?.classList.add("js-shake");
     setTimeout(removeShake, 500);
 }
+/**
+ * * Render idle floating animation for next valid tiles
+ *
+ * @param {Coord} curPos Current position of knight as a Coord instance
+ * @param {HTMLElement[]} curValid Current valid tiles as an array of HTMLElements of their container
+ * @param {HTMLElement[][]} renderTilesEl 2D Array of HTMLElements that represent the rendered view of the model grid
+ * @return {HTMLElement[]} curValid Modifies the curValid array in place to have the updated next valid tiles
+ */
 function renderNextValid(curPos, curValid, renderTilesEl) {
     curValid.forEach((tileEl) => {
         tileEl.classList.remove("tile-next");
@@ -428,25 +519,35 @@ function renderNextValid(curPos, curValid, renderTilesEl) {
     // console.log(curValid);
     return curValid;
 }
+/**
+ * * Render victory screen as modal if the player reaches a valid victory board state
+ * ! Requires modalHeaderEl, modalMessageEl, modalScreenEl from query selector
+ */
 function renderVictory() {
-    console.log("Victory!");
     modalHeaderEl.innerText = "Congratulations!";
     modalMessageEl.innerText = `You reached the goal with ${currentHP} HP remaining!`;
     if (!modalScreenEl.open) {
         modalScreenEl.showModal();
     }
-    // if (modalScreenEl.classList.contains("js-off")) {
-    // 	modalScreenEl.classList.remove("js-off");
-    // }
 }
+/**
+ * * Render defeat screen as modal if the player's HP reaches 0
+ * ! Requires modalHeaderEl, modalMessageEl, modalScreenEl from query selector
+ */
 function renderDefeat() {
-    console.log("Defeat");
     modalHeaderEl.innerText = "Game Over!";
     modalMessageEl.innerText = `You have 0 HP remaining!`;
     if (!modalScreenEl.open) {
         modalScreenEl.showModal();
     }
 }
+/**
+ * * Computes solution path and returns path as an array.
+ *
+ * @param {HTMLElement[][]} renderTilesEl 2D Array of HTMLElements that represent the rendered view of the model grid
+ * @param {Tile[][]} path 2D Array of Tile instances that represent current grid in Model
+ * @return {PathTile[]}  pathTilesEl Solution path as array of PathTile objects with position and rendered HTMLElement container
+ */
 function storePath(renderTilesEl, path) {
     const pathTilesEl = [];
     let [i, j] = [0, 0];
@@ -458,6 +559,21 @@ function storePath(renderTilesEl, path) {
     }
     return pathTilesEl;
 }
+/**
+ * * If visualization mode is on, render arrows that denote direction from traceback algorithm, then highlights solution path
+ * Uses timer of 100ms to represent iteration of traceback algorithm
+ * Returns promise early if there is a resetBoard() call or visualization mode is off.
+ *
+ * ! Requires visualizeState and resetBoardCall boolean in global scope
+ * ! Requires browser support for ES7 (async-await)
+ *
+ * Uses async await syntax based on source:
+ * https://stackoverflow.com/questions/3583724/how-do-i-add-a-delay-in-a-javascript-loop
+ *
+ * @param {HTMLElement[][]} renderTilesEl 2D Array of HTMLElements that represent the rendered view of the model grid
+ * @param {PathTile[]} pathTilesEl Solution path as array of PathTile objects with position and rendered HTMLElement container
+ * @return {Promise} Resolve promise if finished rendering all tiles and solution path or resolves early if board state changes
+ */
 async function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
     for (let row = renderTilesEl.length - 1; row >= 0; row--) {
         for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
@@ -480,6 +596,12 @@ async function renderTileArrowsEl(renderTilesEl, pathTilesEl) {
         await wait(100);
     }
 }
+/**
+ * * Hides all rendered arrows on DOM if visualization mode is turned off
+ *
+ * @param {HTMLElement[][]} renderTilesEl 2D Array of HTMLElements that represent the rendered view of the model grid
+ * @param {PathTile[]} pathTilesEl Solution path as array of PathTile objects with position and rendered HTMLElement container
+ */
 function hideTileArrowsEl(renderTilesEl, pathTilesEl) {
     for (let row = renderTilesEl.length - 1; row >= 0; row--) {
         for (let col = renderTilesEl[0].length - 1; col >= 0; col--) {
@@ -490,6 +612,13 @@ function hideTileArrowsEl(renderTilesEl, pathTilesEl) {
         pathTilesEl[i].tileEl.classList.remove("js-show-path");
     }
 }
+/**
+ * * Determines if move is valid (if target is adjacent right or down tile)
+ *
+ * @param {Coord} curPos Current position of knight as Coord object
+ * @param {Coord} movePos Target position of knight as Coord object based on player input
+ * @return {string | boolean}  Direction of valid move "right" or "down" or false as boolean if move is not valid
+ */
 function moveIsValid(curPos, movePos) {
     if (movePos.x - curPos.x === 1 && movePos.y === curPos.y) {
         return "right";
@@ -526,7 +655,7 @@ function onTileClick(event) {
             const newHP = processHP(currentHP, currentPos, targetPos, currentGrid);
             currentPos = targetPos;
             currentHP = newHP;
-            renderKnight(direction, target);
+            renderKnightMove(direction, target);
             healthEl.innerText = `HP: ${currentHP}`;
             target.classList.add("tile-selected");
             if (currentHP > 0) {
@@ -609,6 +738,8 @@ function renderHint() {
 }
 function changeLevel() {
     currentLevel = levels[currentLevel.index === 2 ? 0 : currentLevel.index + 1];
+    enemiesRank = Math.floor(currentLevel.maxValueEnemy / ENEMIES.length);
+    healthRank = Math.floor(currentLevel.maxValueHealth / HEALTH.length);
     btnDiffEl.innerText = `Level: ${LVL_NAMES[currentLevel.index]}`;
     newBoard();
 }
