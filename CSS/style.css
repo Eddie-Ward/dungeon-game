@@ -49,7 +49,7 @@
 	--margin-small: 0.75rem;
 	--margin-medium: 1.5rem;
 
-	--padding-small: 0.7rem;
+	--padding-small: 0.875rem;
 	--padding-medium: 1.5rem;
 	--padding-large: 3rem;
 }
@@ -144,7 +144,7 @@ button:hover {
 }
 
 .padding-top-medium {
-	padding-top: var(--padding-medium);
+	padding-top: clamp(var(--padding-medium), 3vh, 2rem);
 }
 
 .padding-bottom {
@@ -194,12 +194,9 @@ button:hover {
 
 /* Main game grid */
 .game-grid {
-	/* grid-template-columns: repeat(4, 1fr); */
-	/* grid-template-rows: repeat(4, 1fr); */
 	background-color: azure;
 	aspect-ratio: 1;
 	max-width: 52rem;
-	/* padding: var(--margin-medium); */
 }
 
 div[class^="tile"] {
@@ -294,6 +291,8 @@ img[class^="svg"] {
 	transform: scale(0.8, 0.8);
 }
 
+/* Color generator from filter
+   Source: https://codepen.io/sosuke/pen/Pjoqqp */
 img.svg-right-arrow,
 img.svg-down-arrow {
 	position: absolute;
@@ -368,6 +367,10 @@ img.svg-down-arrow {
 	}
 }
 
+/* Animations */
+
+/* Shake animation source
+   https://codepen.io/jh3y/pen/yLKMOBm */
 @keyframes shake {
 	0%,
 	100% {
@@ -388,6 +391,8 @@ img.svg-down-arrow {
 	}
 }
 
+/* Floating animation source
+   https://codepen.io/MarioDesigns/pen/woJgeo */
 @keyframes float {
 	0% {
 		transform: translatey(0px) scale(0.6, 0.6);
